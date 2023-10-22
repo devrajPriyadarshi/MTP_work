@@ -102,11 +102,11 @@ if __name__ == "__main__":
 
     print("\nDone!")
 
-    fig, axs = plt.subplots(nrows=1, ncols=len(weights), figsize=(len(weights)*5, 5))
+    fig, axs = plt.subplots(nrows=1, ncols=11, figsize=(11*5, 5))
     for i in weights:
         axs[i].imshow(interpolated_imgs[i])
         axs[i].axis("off")
-        axs[i].set_title(str(i/10))
+
     plt.tight_layout()
     plt.savefig("Results/" + res_folder + "interpolation_result.png")
-    plt.show()
+    # plt.show()
