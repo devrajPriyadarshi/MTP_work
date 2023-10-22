@@ -1,0 +1,12 @@
+data/*
+Models/*
+__pycache__/*
+Results/*
+tests/*
+
+bestScore.pth
+TrainingScoreArr.npy
+ValidationScoreArr.npy
+MTP_work.code-workspace
+
+# environment.yml
