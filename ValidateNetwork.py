@@ -55,9 +55,11 @@ def validator(net):
 
 if __name__ == "__main__":
 
-    ModelData = torch.load("bestScore.pth")
-    trainLoss = np.load("TrainingScoreArr.npy")
-    valLoss = np.load("ValidationScoreArr.npy")
+    model_folder = "Overnight_21/"
+
+    ModelData = torch.load("Models/"+model_folder+"bestScore.pth")
+    trainLoss = np.load("Models/"+model_folder+"TrainingScoreArr.npy")
+    valLoss = np.load("Models/"+model_folder+"ValidationScoreArr.npy")
     assert len(trainLoss) == len(valLoss)
 
     classes = ModelData['classes']

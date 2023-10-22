@@ -42,7 +42,7 @@ def validator(net):
     ValidateCriterion = ChamferDistance(point_reduction="mean", batch_reduction="sum")
 
 
-    for i , data in enumerate(TestLoader, 0):
+    for _ , data in enumerate(TestLoader, 0):
         imgs, pcs = data
         imgs = imgs.to(device)
         pcs = pcs.to(device)
@@ -104,7 +104,11 @@ def training(net):
                 {   'epoch':epoch, 
                     'classes':CLASSES,
                     "lr":LR,
+                    "batch_size":BATCH_SIZE,
                     "score":currentScore,
+                    "num_views":NUM_VIEWS,
+                    "num_heads":NUM_ENCODER_HEADS,
+                    "num_layers":NUM_ENCODER_LAYERS,
                     'model_state_dict': net.state_dict(), 
                     'optimizer_state_dict': optimizer.state_dict()
                 },
@@ -116,7 +120,7 @@ def training(net):
     print("best Score = " + str(bestScore))
         
 
-def finetune(net: torch.nn.Module , modeldata_path):
+def finetune(net: torch.nn.Module , modeldata_path: str):
     net.to(device)
     net.train()
     modeldata = torch.load(modeldata_path)
@@ -137,7 +141,7 @@ def finetune(net: torch.nn.Module , modeldata_path):
     TrainingScoreArray = np.concatenate((np.load("TrainingScoreArr.npy"), TrainingScoreArray))
     
 
-    print("\nfintuning..")
+    print("\nfinetuning..")
     for epoch in range(bestEpoch, END_EPOCH):  
         
         net.train()
@@ -176,15 +180,22 @@ def finetune(net: torch.nn.Module , modeldata_path):
             print("Saving Model...")
             torch.save(
                 {   'epoch':epoch, 
+                    "before_tune_epoch":bestEpoch,
+                    "before_tune_score":modeldata["score"],
                     'classes':CLASSES,
                     "lr":LR,
+                    "batch_size":BATCH_SIZE,
                     "score":currentScore,
+                    "num_views":NUM_VIEWS,
+                    "num_heads":NUM_ENCODER_HEADS,
+                    "num_layers":NUM_ENCODER_LAYERS,
                     'model_state_dict': net.state_dict(), 
                     'optimizer_state_dict': optimizer.state_dict()
                 },
                 'bestScore_finetuned.pth')
             np.save( "ValidationScoreArr_finetuned.npy", np.array(ValidationScoreArray))
             np.save( "TrainingScoreArr_finetuned.npy", np.array(TrainingScoreArray))
+    
     print("End training..")
     print("best Epoch = " + str(bestEpoch))
     print("best Score = " + str(bestScore))

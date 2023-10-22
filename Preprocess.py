@@ -1,5 +1,5 @@
 # Need function to rotate the Point Cloud
-# Maybe to add noise to them
+# Maybe to add noise to them -> DONT
 # Maybe to enchance the image
 
 import cv2

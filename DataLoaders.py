@@ -7,7 +7,7 @@ from random import sample
 import torch
 from torch.utils.data import Dataset
 
-from utils.shapenet_taxonomy import shapenet_category_to_id
+from shapenet_taxonomy import shapenet_category_to_id
 from Preprocess import fixPointcloudOrientation, cv2ToTensor
 
 views = [str(i).zfill(2)+".png" for i in range(24)]

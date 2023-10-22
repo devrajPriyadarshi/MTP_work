@@ -11,7 +11,7 @@ from pytorch3d.structures import Pointclouds
 from pytorch3d.transforms import euler_angles_to_matrix
 from pytorch3d.renderer import look_at_view_transform, FoVPerspectiveCameras, PointsRasterizationSettings, PointsRenderer, PointsRasterizer, AlphaCompositor
 
-from utils.shapenet_taxonomy import shapenet_category_to_id as ID
+from shapenet_taxonomy import shapenet_category_to_id as ID
 from MitsubaRendering import ImageFromNumpyArr
 
 pc_folder = "data/ShapeNet/ShapeNet_pointclouds/"
@@ -79,7 +79,6 @@ def Vizualize_all(rgbImgs:torch.Tensor , pointcloud: torch.Tensor) -> plt:
     Input:
         rgbImgs: a torch tensor of Nx3xHxW shape. N multiview images of object.
         pointcloud: a torch tensor of Mx3 shape.
-        metadata: a list of N metadata of N images.
     Output:
         plt: matplotlib.pyplot obj
 
@@ -183,7 +182,7 @@ def ComparePointClouds(pc1: torch.Tensor, pc2: torch.Tensor) -> plt:
 def ImageFromTensor(pc: torch.Tensor):
     pcl = pc.detach().cpu().numpy()
     img = ImageFromNumpyArr(pcl)
-    return img
+    return img.clip(min=0.0, max=1.0)
 
 def ImageFromNumpy(np_arr):
     img = ImageFromNumpyArr(np_arr)
