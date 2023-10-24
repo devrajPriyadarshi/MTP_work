@@ -104,7 +104,7 @@ def training(net):
         TrainingScoreArray.append(TLoss)
         if currentScore < bestScore:
             bestScore = currentScore
-            bestEpoch = epoch+1
+            # bestEpoch = epoch+1
             print("Saving Model at Epoch "+str(epoch+1)+"...")
             torch.save(
                 {   'epoch':epoch, 
@@ -132,14 +132,16 @@ def finetune(net: torch.nn.Module , model_folder: str):
     modeldata = torch.load("Models/"+model_folder+"/bestScore.pth")
 
     bestScore = modeldata["score"]
+    # bestScore = sys.maxsize
     bestEpoch = modeldata["epoch"]
     net.load_state_dict(modeldata["model_state_dict"])
     
     Chamfer_loss = ChamferDistance(point_reduction="sum", batch_reduction="mean")
     Projection_loss = ProjectionLoss(rotations= [ [np.pi/2, 0, 0], [0, np.pi/2, 0], [0, 0, np.pi/2]], batch_reduction="mean")
     
-    optimizer = optim.Adam(net.parameters(), lr=LR)
-    optimizer.load_state_dict(modeldata["optimizer_state_dict"])
+    _lr = 0.00001
+    optimizer = optim.Adam(net.parameters(), lr=_lr)
+    # optimizer.load_state_dict(modeldata["optimizer_state_dict"])
 
     ValidationScoreArray = np.array([])
     TrainingScoreArray = np.array([])
@@ -148,7 +150,7 @@ def finetune(net: torch.nn.Module , model_folder: str):
     
 
     print("\nfinetuning..")
-    for epoch in range(bestEpoch, END_EPOCH):  
+    for epoch in range(modeldata["epoch"]+1, END_EPOCH):  
         
         net.train()
         running_loss = 0.0
@@ -161,7 +163,8 @@ def finetune(net: torch.nn.Module , model_folder: str):
             pcs = pcs.to(device)
             res = net(imgs)
 
-            loss = Chamfer_loss(pcs, res) + 0.1*Projection_loss(pcs, res)
+            loss = Chamfer_loss(pcs, res) + 0.01*Projection_loss(pcs, res)
+            # loss = Chamfer_loss(pcs, res)
             loss.backward()
             optimizer.step()
 
@@ -182,14 +185,14 @@ def finetune(net: torch.nn.Module , model_folder: str):
         TrainingScoreArray.append(TLoss)
         if currentScore < bestScore:
             bestScore = currentScore
-            bestEpoch = epoch+1
-            print("Saving Model...\n")
+            # bestEpoch = epoch+1
+            print("Saving Model at Epoch "+str(epoch+1)+"...")
             torch.save(
                 {   'epoch':epoch, 
                     "before_tune_epoch":bestEpoch,
                     "before_tune_score":modeldata["score"],
                     'classes':CLASSES,
-                    "lr":LR,
+                    "lr":_lr,
                     "batch_size":BATCH_SIZE,
                     "score":currentScore,
                     "num_views":NUM_VIEWS,
@@ -233,8 +236,8 @@ if __name__ == "__main__":
 
     net = Network(num_views=NUM_VIEWS, num_heads=NUM_ENCODER_HEADS, num_layer=NUM_ENCODER_LAYERS)
     
-    training(net)
-    # finetune(net, "10_24_03_49")
+    # training(net)
+    finetune(net, "10_24_03_49")
     # validator(net)
 
     # time1 = time.time()
