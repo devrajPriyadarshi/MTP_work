@@ -1,5 +1,8 @@
+import os
 import sys
 import time
+from datetime import datetime
+
 import numpy as np
 import torch
 import torch.optim as optim
@@ -16,7 +19,10 @@ if torch.cuda.is_available():
 else:
     device = torch.device("cpu")
 
-BATCH_SIZE = 16
+dt = datetime.now()
+FOLDER_NAME =  dt.strftime("%m_%d_%H_%M")
+
+BATCH_SIZE = 32
 CLASSES = ["chair", "table"]
 NUM_VIEWS = 24
 NUM_ENCODER_LAYERS = 2
@@ -39,8 +45,7 @@ def validator(net):
     net.to(device)
     net.eval()
     TotalChamferLoss = 0.0
-    ValidateCriterion = ChamferDistance(point_reduction="mean", batch_reduction="sum")
-
+    ValidateCriterion = ChamferDistance(point_reduction="sum", batch_reduction="mean")
 
     for _ , data in enumerate(TestLoader, 0):
         imgs, pcs = data
@@ -49,17 +54,18 @@ def validator(net):
         res = net(imgs)
         loss = ValidateCriterion(pcs, res)
         TotalChamferLoss += loss.item()
-        # print(f'[Test: {i + 1:5d}] loss: {loss.item():.7f}')
 
     return TotalChamferLoss
 
 def training(net):
+
+    os.mkdir("Models/"+FOLDER_NAME)
     
     net.to(device)
     net.train()
     bestScore = sys.maxsize
     bestEpoch = 0
-    Loss = ChamferDistance(point_reduction="mean", batch_reduction="sum")
+    Loss = ChamferDistance(point_reduction="sum", batch_reduction="mean")
 
     optimizer = optim.Adam(net.parameters(), lr=LR)
 
@@ -67,7 +73,7 @@ def training(net):
     TrainingScoreArray = []
     print("\nStart training..")
     for epoch in range(0, END_EPOCH):  
-        
+        print("Epoch "+str(epoch)+" Running..")
         net.train()
         running_loss = 0.0
         TLoss = 0
@@ -99,7 +105,7 @@ def training(net):
         if currentScore < bestScore:
             bestScore = currentScore
             bestEpoch = epoch+1
-            print("Saving Model...")
+            print("Saving Model at Epoch "+str(epoch+1)+"...")
             torch.save(
                 {   'epoch':epoch, 
                     'classes':CLASSES,
@@ -112,24 +118,24 @@ def training(net):
                     'model_state_dict': net.state_dict(), 
                     'optimizer_state_dict': optimizer.state_dict()
                 },
-                'bestScore.pth')
-            np.save( "ValidationScoreArr.npy", np.array(ValidationScoreArray))
-            np.save( "TrainingScoreArr.npy", np.array(TrainingScoreArray))
+                "Models/"+FOLDER_NAME+'/bestScore.pth')
+            np.save( "Models/"+FOLDER_NAME+"/ValidationScoreArr.npy", np.array(ValidationScoreArray))
+            np.save( "Models/"+FOLDER_NAME+"/TrainingScoreArr.npy", np.array(TrainingScoreArray))
     print("End training..")
     print("best Epoch = " + str(bestEpoch))
     print("best Score = " + str(bestScore))
         
 
-def finetune(net: torch.nn.Module , modeldata_path: str):
+def finetune(net: torch.nn.Module , model_folder: str):
     net.to(device)
     net.train()
-    modeldata = torch.load(modeldata_path)
+    modeldata = torch.load("Models/"+model_folder+"/bestScore.pth")
 
     bestScore = modeldata["score"]
     bestEpoch = modeldata["epoch"]
     net.load_state_dict(modeldata["model_state_dict"])
     
-    Chamfer_loss = ChamferDistance(point_reduction="mean", batch_reduction="sum")
+    Chamfer_loss = ChamferDistance(point_reduction="sum", batch_reduction="mean")
     Projection_loss = ProjectionLoss(rotations= [ [np.pi/2, 0, 0], [0, np.pi/2, 0], [0, 0, np.pi/2]], batch_reduction="mean")
     
     optimizer = optim.Adam(net.parameters(), lr=LR)
@@ -137,8 +143,8 @@ def finetune(net: torch.nn.Module , modeldata_path: str):
 
     ValidationScoreArray = np.array([])
     TrainingScoreArray = np.array([])
-    ValidationScoreArray = np.concatenate((np.load("ValidationScoreArr.npy"), ValidationScoreArray))
-    TrainingScoreArray = np.concatenate((np.load("TrainingScoreArr.npy"), TrainingScoreArray))
+    ValidationScoreArray = np.concatenate((np.load("Models/"+model_folder+"/ValidationScoreArr.npy"), ValidationScoreArray))
+    TrainingScoreArray = np.concatenate((np.load("Models/"+model_folder+"/TrainingScoreArr.npy"), TrainingScoreArray))
     
 
     print("\nfinetuning..")
@@ -155,7 +161,7 @@ def finetune(net: torch.nn.Module , modeldata_path: str):
             pcs = pcs.to(device)
             res = net(imgs)
 
-            loss = Chamfer_loss(pcs, res) + 0.01*Projection_loss(pcs, res)
+            loss = Chamfer_loss(pcs, res) + 0.1*Projection_loss(pcs, res)
             loss.backward()
             optimizer.step()
 
@@ -177,7 +183,7 @@ def finetune(net: torch.nn.Module , modeldata_path: str):
         if currentScore < bestScore:
             bestScore = currentScore
             bestEpoch = epoch+1
-            print("Saving Model...")
+            print("Saving Model...\n")
             torch.save(
                 {   'epoch':epoch, 
                     "before_tune_epoch":bestEpoch,
@@ -192,58 +198,13 @@ def finetune(net: torch.nn.Module , modeldata_path: str):
                     'model_state_dict': net.state_dict(), 
                     'optimizer_state_dict': optimizer.state_dict()
                 },
-                'bestScore_finetuned.pth')
-            np.save( "ValidationScoreArr_finetuned.npy", np.array(ValidationScoreArray))
-            np.save( "TrainingScoreArr_finetuned.npy", np.array(TrainingScoreArray))
+                "Models/"+model_folder+'/bestScore_finetuned.pth')
+            np.save( "Models/"+model_folder+"/ValidationScoreArr_finetuned.npy", np.array(ValidationScoreArray))
+            np.save( "Models/"+model_folder+"/TrainingScoreArr_finetuned.npy", np.array(TrainingScoreArray))
     
     print("End training..")
     print("best Epoch = " + str(bestEpoch))
     print("best Score = " + str(bestScore))
-
-def demo(net):
-    
-    net.to(device)
-    net.train()
-    bestScore = sys.maxsize
-    bestEpoch = 0
-    Loss = ChamferDistance(point_reduction="mean", batch_reduction="sum")
-
-    optimizer = optim.Adam(net.parameters(), lr=LR)
-
-    ValidationScoreArray = []
-    TrainingScoreArray = []
-    print("\nStart training..")
-    for epoch in range(0, END_EPOCH):  
-        
-        net.train()
-        running_loss = 0.0
-        TLoss = 0
-        for i, data in enumerate(TrainLoader, 0):
-            optimizer.zero_grad()
-            imgs, pcs = data
-            imgs = imgs.to(device)
-            pcs = pcs.to(device)
-            res = net(imgs)
-            loss = Loss(pcs, res)
-            loss.backward()
-            optimizer.step()
-
-            TLoss += loss.item()
-            running_loss += loss.item()
-            print(f'[{epoch + 1}, {i + 1:5d}] loss: {loss.item():.7f}')
-
-        # currentScore = validator(net=net)
-        # print("At Epoch \"" + str(epoch+1) + "\" Overall Score: " + str(currentScore))
-        print("")
-        # ValidationScoreArray.append(currentScore)
-        # TrainingScoreArray.append(TLoss)
-    
-    print("End training..")
-    # print("")
-    # print("Training Score Array:")
-    # print(TrainingScoreArray)
-    # print("Validation Score Array:")
-    # print(ValidationScoreArray)
 
 if __name__ == "__main__":
 
@@ -271,9 +232,9 @@ if __name__ == "__main__":
 
 
     net = Network(num_views=NUM_VIEWS, num_heads=NUM_ENCODER_HEADS, num_layer=NUM_ENCODER_LAYERS)
-
-    # training(net)
-    finetune(net, "bestScore.pth")
+    
+    training(net)
+    # finetune(net, "10_24_03_49")
     # validator(net)
 
     # time1 = time.time()

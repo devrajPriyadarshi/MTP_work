@@ -22,11 +22,6 @@ else:
 
 views = [str(i).zfill(2)+".png" for i in range(24)]
 
-# CLASSES = ["chair", "table"]
-NUM_VIEWS = 24
-NUM_ENCODER_LAYERS = 2
-NUM_ENCODER_HEADS = 1
-
 TRANSFORMS = tf.Compose([   tf.ToTensor(),
                             tf.Resize((224,224), antialias=True),
                             tf.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
@@ -34,15 +29,19 @@ TRANSFORMS = tf.Compose([   tf.ToTensor(),
 
 if __name__ == "__main__":
 
-    model_folder = "Overnight_21/"
+    model_folder = "10_24_03_49"
 
-    ModelData = torch.load("Models/"+model_folder+"bestScore.pth")
-    trainLoss = np.load("Models/"+model_folder+"TrainingScoreArr.npy")
-    valLoss = np.load("Models/"+model_folder+"ValidationScoreArr.npy")
+    ModelData = torch.load("Models/"+model_folder+"/bestScore.pth")
+    trainLoss = np.load("Models/"+model_folder+"/TrainingScoreArr.npy")
+    valLoss = np.load("Models/"+model_folder+"/ValidationScoreArr.npy")
     assert len(trainLoss) == len(valLoss)
 
     classes = ModelData['classes']
-    print("\n--------------- Vizualizing Attention Maps ---------------")
+    print("\n--------------- Intertpolating ---------------")
+
+    NUM_VIEWS = ModelData["num_views"]
+    NUM_ENCODER_LAYERS = ModelData["num_layers"]
+    NUM_ENCODER_HEADS = ModelData["num_heads"]
 
     net = Network(num_views=NUM_VIEWS, num_heads=NUM_ENCODER_HEADS, num_layer=NUM_ENCODER_LAYERS)
     net.load_state_dict(ModelData["model_state_dict"])
@@ -86,8 +85,6 @@ if __name__ == "__main__":
     # plt.axis("off")
     # plt.show()
 
-    res_folder = "trial1/"
-
     weights = list(range(0,11))
     interpolate_tensor = torch.zeros((len(weights), 1000))
     for x in weights:
@@ -108,5 +105,5 @@ if __name__ == "__main__":
         axs[i].axis("off")
 
     plt.tight_layout()
-    plt.savefig("Results/" + res_folder + "interpolation_result.png")
+    plt.savefig("Results/" + model_folder + "/interpolation_result.png")
     # plt.show()
