@@ -14,6 +14,7 @@ from Vizualization import ComparePointClouds, ImageFromTensor, ImageFromNumpy
 
 if torch.cuda.is_available():
     device = torch.device("cuda:0")
+    # device = torch.device("cpu")
     torch.cuda.set_device(device)
 else:
     device = torch.device("cpu")
