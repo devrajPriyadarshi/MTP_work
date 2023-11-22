@@ -32,7 +32,7 @@ NUM_ENCODER_HEADS = 1
 SHUFFLE = True
 WORKERS = 6
 
-END_EPOCH = 1
+END_EPOCH = 100
 LR = 0.0001
 
 TRANSFORMS = tf.Compose([   tf.ToTensor(),
@@ -63,8 +63,6 @@ def validator():
 
 def training():
 
-    os.mkdir("Models/"+FOLDER_NAME)
-
     net.train()
     bestScore = sys.maxsize
     bestEpoch = 0
@@ -77,6 +75,12 @@ def training():
     print("\nStart training..")
     for epoch in range(0, END_EPOCH):
         print("Epoch "+str(epoch+1)+" Running..")
+        
+        f = open("Models/"+FOLDER_NAME+"/log.txt", 'a')
+        towrite = "Epoch "+str(epoch+1)+" Running.."
+        f.write(towrite+'\n')
+        f.close()
+
         running_loss = 0.0
         TLoss = 0
         for i, data in enumerate(TrainLoader, 0):
@@ -94,19 +98,42 @@ def training():
             # print(f'[{epoch + 1}, {i + 1:5d}] loss: {loss.item():.7f}')
             if i % 100 == 99:
                 print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / 100:.7f}')
+                
+                f = open("Models/"+FOLDER_NAME+"/log.txt", 'a')
+                towrite = f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / 100:.7f}'
+                f.write(towrite+'\n')
+                f.close()
+
                 running_loss = 0.0
         
         print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / (i%100 + 1):.7f}')
 
+        f = open("Models/"+FOLDER_NAME+"/log.txt", 'a')
+        towrite = f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / (i%100 + 1):.7f}'
+        f.write(towrite+'\n')
+        f.close()
+        
         currentScore = validator()
         print("At Epoch \"" + str(epoch+1) + "\" Overall Score: " + str(currentScore))
         print("")
+
+        f = open("Models/"+FOLDER_NAME+"/log.txt", 'a')
+        towrite = "At Epoch \"" + str(epoch+1) + "\" Overall Score: " + str(currentScore)
+        f.write(towrite+'\n\n')
+        f.close()
+
         ValidationScoreArray.append(currentScore)
         TrainingScoreArray.append(TLoss)
         if currentScore < bestScore:
             bestScore = currentScore
             # bestEpoch = epoch+1
             print("Saving Model at Epoch "+str(epoch+1)+"...")
+
+            f = open("Models/"+FOLDER_NAME+"/log.txt", 'a')
+            towrite = "Saving Model at Epoch "+str(epoch+1)+"..."
+            f.write(towrite+'\n')
+            f.close()
+
             torch.save(
                 {   'epoch':epoch, 
                     'classes':CLASSES,
@@ -125,6 +152,10 @@ def training():
     print("End training..")
     print("best Epoch = " + str(bestEpoch))
     print("best Score = " + str(bestScore))
+    f = open("Models/"+FOLDER_NAME+"/log.txt", 'a')
+    towrite = "End training..\n"+"best Epoch = " + str(bestEpoch)+"\n"+"best Score = " + str(bestScore)
+    f.write(towrite+'\n')
+    f.close()
         
 
 def finetune(model_folder: str):
@@ -375,6 +406,8 @@ def train_one():
 
 if __name__ == "__main__":
 
+    os.mkdir("Models/"+FOLDER_NAME)
+
     ShapeNetTrainData = ShapeNetDataset(classes=CLASSES, split="train80", transforms=TRANSFORMS)
     TrainLoader = DataLoader(ShapeNetTrainData, batch_size=BATCH_SIZE, shuffle=SHUFFLE, num_workers=WORKERS)
 
@@ -396,6 +429,28 @@ if __name__ == "__main__":
 
     print("\nTest Data Size : \t" + str(len(ShapeNetTestData)))
     print("Batches / Epochs: \t" + str(len(TestLoader)))
+
+    towrite = []
+
+    towrite.append("\n--------------- Training ---------------")
+
+    towrite.append("\n")
+    towrite.append("Classes to Train on: \t" + str(CLASSES))
+    towrite.append("")
+    towrite.append("Device: " + str(device))
+  
+    towrite.append("\nTrain Data Size: \t" + str(len(ShapeNetTrainData)))
+    towrite.append("Batche Size: \t\t" + str(BATCH_SIZE))
+    towrite.append("Batches / Epochs: \t" + str(len(TrainLoader)))
+    towrite.append("Total Epochs: \t\t" + str(END_EPOCH))
+    towrite.append("Total Iterations: \t" + str(END_EPOCH*len(TrainLoader)))
+
+    towrite.append("\nTest Data Size : \t" + str(len(ShapeNetTestData)))
+    towrite.append("Batches / Epochs: \t" + str(len(TestLoader)))
+
+    with open("Models/"+FOLDER_NAME+"/log.txt", 'a') as f:
+        for txt in towrite:
+            f.write(txt+"\n")
 
 
     net = Network(num_views=NUM_VIEWS, num_heads=NUM_ENCODER_HEADS, num_layer=NUM_ENCODER_LAYERS).to(device)

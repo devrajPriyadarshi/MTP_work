@@ -11,8 +11,7 @@ from DataLoaders import ShapeNetDataset
 
 import matplotlib.pyplot as plt
 
-from Preprocess import fixPointcloudOrientation, cv2ToTensor
-from Vizualization import ComparePointClouds, ImageFromTensor, ImageFromNumpy
+from Vizualization import ImageFromTensor
 
 if torch.cuda.is_available():
     device = torch.device("cuda:0")

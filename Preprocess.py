@@ -27,5 +27,5 @@ def fixPointcloudOrientation(pointcloud: torch.Tensor) -> torch.Tensor:
     verts = torch.Tensor(pc_numpy - center)
     return verts@rot
 
-def cv2ToTensor(img: ndarray) -> torch.Tensor:
-    return TF.ToTensor()(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+# def cv2ToTensor(img: ndarray) -> torch.Tensor:
+#     return TF.ToTensor()(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))

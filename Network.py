@@ -1,6 +1,5 @@
 from random import sample
 
-import cv2
 import numpy as np
 
 import torch
@@ -10,7 +9,6 @@ import torchvision.models as Models
 
 from FoldingNet import Decoder
 
-from Preprocess import fixPointcloudOrientation, cv2ToTensor
 # from Vizualization import ComparePointClouds
 
 from torchinfo import summary

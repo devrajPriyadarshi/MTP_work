@@ -1,18 +1,15 @@
 import numpy as np
-from random import randint, sample
-import cv2
+from random import sample
 from PIL import Image
 import torch
 import torchvision.transforms as tf
-from torch.utils.data import DataLoader
 
 from Network import Network
-from DataLoaders import ShapeNetDataset
 
 import matplotlib.pyplot as plt
 
-from Preprocess import fixPointcloudOrientation, cv2ToTensor
-from Vizualization import ComparePointClouds, ImageFromTensor, ImageFromNumpy
+from Preprocess import fixPointcloudOrientation
+from Vizualization import ImageFromTensor
 
 if torch.cuda.is_available():
     device = torch.device("cuda:0")
