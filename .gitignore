@@ -3,6 +3,7 @@ Models/*
 __pycache__/*
 Results/*
 tests/*
+dataset_samples/*
 
 bestScore.pth
 TrainingScoreArr.npy

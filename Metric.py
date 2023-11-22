@@ -80,7 +80,7 @@ class ProjectionLoss(torch.nn.Module):
         proj3 = torch.sum(torch.mul(self.prod, torch.round(proj2)), dim = 1).int()
         pred_proj1 = torch.sum(self.gaussianPlate[proj3.tolist(),:,:], dim=1).flatten(start_dim=1)
 
-        proj1 = torch.matmul( self.K@torch.concat((self.R2,self.T), dim = 1), torch.transpose(torch.concat((res_batch.detach(), self.ones), dim = 2), 1, 2))
+        proj1 = torch.matmul( self.K@torch.concat((self.R2,self.T), dim = 1), torch.transpose(torch.concat((gt_batch.detach(), self.ones), dim = 2), 1, 2))
         proj2 = torch.div(proj1, proj1[:,2,:].unsqueeze(1))
         proj3 = torch.sum(torch.mul(self.prod, torch.round(proj2)), dim = 1).int()
         gt_proj2 = torch.sum(self.gaussianPlate[proj3.tolist(),:,:], dim=1).flatten(start_dim=1)
@@ -89,7 +89,7 @@ class ProjectionLoss(torch.nn.Module):
         proj3 = torch.sum(torch.mul(self.prod, torch.round(proj2)), dim = 1).int()
         pred_proj2 = torch.sum(self.gaussianPlate[proj3.tolist(),:,:], dim=1).flatten(start_dim=1)
 
-        proj1 = torch.matmul( self.K@torch.concat((self.R3,self.T), dim = 1), torch.transpose(torch.concat((res_batch.detach(), self.ones), dim = 2), 1, 2))
+        proj1 = torch.matmul( self.K@torch.concat((self.R3,self.T), dim = 1), torch.transpose(torch.concat((gt_batch.detach(), self.ones), dim = 2), 1, 2))
         proj2 = torch.div(proj1, proj1[:,2,:].unsqueeze(1))
         proj3 = torch.sum(torch.mul(self.prod, torch.round(proj2)), dim = 1).int()
         gt_proj3 = torch.sum(self.gaussianPlate[proj3.tolist(),:,:], dim=1).flatten(start_dim=1)
@@ -105,6 +105,28 @@ class ProjectionLoss(torch.nn.Module):
 
         return Loss
         
+    def getProjection(self, pc: torch.Tensor):
+
+        self.ones = torch.ones((pc.shape[0], 1024, 1)).to(device)
+        self.prod = self.prod_.repeat(pc.shape[0], 1, 1)
+
+        proj1 = torch.matmul( self.K@torch.concat((self.R1,self.T), dim = 1), torch.transpose(torch.concat((pc.detach(), self.ones), dim = 2), 1, 2))
+        proj2 = torch.div(proj1, proj1[:,2,:].unsqueeze(1))
+        proj3 = torch.sum(torch.mul(self.prod, torch.round(proj2)), dim = 1).int()
+        gt_proj1 = torch.sum(self.gaussianPlate[proj3.tolist(),:,:], dim=1).flatten(start_dim=1)
+
+        proj1 = torch.matmul( self.K@torch.concat((self.R2,self.T), dim = 1), torch.transpose(torch.concat((pc.detach(), self.ones), dim = 2), 1, 2))
+        proj2 = torch.div(proj1, proj1[:,2,:].unsqueeze(1))
+        proj3 = torch.sum(torch.mul(self.prod, torch.round(proj2)), dim = 1).int()
+        gt_proj2 = torch.sum(self.gaussianPlate[proj3.tolist(),:,:], dim=1).flatten(start_dim=1)
+
+        proj1 = torch.matmul( self.K@torch.concat((self.R3,self.T), dim = 1), torch.transpose(torch.concat((pc.detach(), self.ones), dim = 2), 1, 2))
+        proj2 = torch.div(proj1, proj1[:,2,:].unsqueeze(1))
+        proj3 = torch.sum(torch.mul(self.prod, torch.round(proj2)), dim = 1).int()
+        gt_proj3 = torch.sum(self.gaussianPlate[proj3.tolist(),:,:], dim=1).flatten(start_dim=1)
+
+        return gt_proj1, gt_proj2, gt_proj3
+
     def gaussianBlock(self, sigma: float, k: int):
         arr = np.zeros((k,k), dtype=np.float32)
         for i in range(k):
