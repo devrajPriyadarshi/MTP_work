@@ -11,7 +11,7 @@ import torchvision.models as Models
 from FoldingNet import Decoder
 
 from Preprocess import fixPointcloudOrientation, cv2ToTensor
-from Vizualization import Vizualize_all, ComparePointClouds
+# from Vizualization import ComparePointClouds
 
 from torchinfo import summary
 
@@ -95,28 +95,28 @@ class Network(nn.Module):
         x = torch.transpose(x, 1, 2)
         return x
     
-if __name__ == '__main__':
+# if __name__ == '__main__':
 
-    BATCH_SIZE = 1
-    NUM_VIEWS = 24
-    NUM_HEADS = 1
-    NUM_LAYER = 2
+#     BATCH_SIZE = 1
+#     NUM_VIEWS = 24
+#     NUM_HEADS = 1
+#     NUM_LAYER = 2
 
-    # Take a input sample
-    pc_Tensor = fixPointcloudOrientation(torch.Tensor(np.load("tests/chair_sample/pointcloud_1024.npy")))
-    img_Tensor = torch.Tensor(np.array([cv2ToTensor(cv2.imread("tests/chair_sample/rendering/"+str(idx//10)+str(idx%10)+".png")) for idx in sample(range(24), NUM_VIEWS) ]))
+#     # Take a input sample
+#     pc_Tensor = fixPointcloudOrientation(torch.Tensor(np.load("tests/chair_sample/pointcloud_1024.npy")))
+#     img_Tensor = torch.Tensor(np.array([cv2ToTensor(cv2.imread("tests/chair_sample/rendering/"+str(idx//10)+str(idx%10)+".png")) for idx in sample(range(24), NUM_VIEWS) ]))
 
-    # encoder = ImageEncoder(num_views=NUM_VIEWS, num_heads=NUM_HEADS, num_layer=NUM_LAYER)
-    # summary(encoder, input_size=[BATCH_SIZE, NUM_VIEWS, 3, 224, 224], row_settings=('depth', 'hide_recursive_layers'))
-    # # encoder.printSummary()
+#     # encoder = ImageEncoder(num_views=NUM_VIEWS, num_heads=NUM_HEADS, num_layer=NUM_LAYER)
+#     # summary(encoder, input_size=[BATCH_SIZE, NUM_VIEWS, 3, 224, 224], row_settings=('depth', 'hide_recursive_layers'))
+#     # # encoder.printSummary()
     
-    # decoder = FoldingDecoder()
-    # summary(decoder, input_size=[BATCH_SIZE, 1000], row_settings=('depth', 'hide_recursive_layers'))
+#     # decoder = FoldingDecoder()
+#     # summary(decoder, input_size=[BATCH_SIZE, 1000], row_settings=('depth', 'hide_recursive_layers'))
     
-    net = Network(num_views=NUM_VIEWS, num_heads=NUM_HEADS, num_layer=NUM_LAYER).to(device)
-    inp = img_Tensor.unsqueeze(0).to(device)
-    gt_pc = pc_Tensor.to(device)
-    res_pc = net(inp)
+#     net = Network(num_views=NUM_VIEWS, num_heads=NUM_HEADS, num_layer=NUM_LAYER).to(device)
+#     inp = img_Tensor.unsqueeze(0).to(device)
+#     gt_pc = pc_Tensor.to(device)
+#     res_pc = net(inp)
 
-    plot = ComparePointClouds(gt_pc, res_pc.squeeze(0).permute(1,0))
-    plot.show()
+#     plot = ComparePointClouds(gt_pc, res_pc.squeeze(0).permute(1,0))
+#     plot.show()

@@ -3,7 +3,7 @@
 req:
 
 torch
-pyTorch3d
+chamferdist
 numpy
 cv2
 

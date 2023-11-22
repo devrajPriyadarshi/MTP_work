@@ -32,7 +32,7 @@ NUM_ENCODER_HEADS = 1
 SHUFFLE = True
 WORKERS = 6
 
-END_EPOCH = 100
+END_EPOCH = 1
 LR = 0.0001
 
 TRANSFORMS = tf.Compose([   tf.ToTensor(),
@@ -57,11 +57,11 @@ def validator():
             pcs = pcs.to(device)
             res = net(imgs)
             loss = Chamfer_loss(pcs, res)
-            TotalChamferLoss += loss
+            TotalChamferLoss += loss.item()
 
-    return TotalChamferLoss.item()
+    return TotalChamferLoss
 
-def training(net):
+def training():
 
     os.mkdir("Models/"+FOLDER_NAME)
 
@@ -76,7 +76,7 @@ def training(net):
     TrainingScoreArray = []
     print("\nStart training..")
     for epoch in range(0, END_EPOCH):
-        print("Epoch "+str(epoch)+" Running..")
+        print("Epoch "+str(epoch+1)+" Running..")
         running_loss = 0.0
         TLoss = 0
         for i, data in enumerate(TrainLoader, 0):
@@ -98,7 +98,7 @@ def training(net):
         
         print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / (i%100 + 1):.7f}')
 
-        currentScore = validator(net_val=net)
+        currentScore = validator()
         print("At Epoch \"" + str(epoch+1) + "\" Overall Score: " + str(currentScore))
         print("")
         ValidationScoreArray.append(currentScore)
@@ -127,7 +127,7 @@ def training(net):
     print("best Score = " + str(bestScore))
         
 
-def finetune(net: torch.nn.Module , model_folder: str):
+def finetune(model_folder: str):
 
     net.train()
     modeldata = torch.load("Models/"+model_folder+"/bestScore.pth")
@@ -307,12 +307,78 @@ def continue_training(model_folder: str):
     print("best Epoch = " + str(bestEpoch))
     print("best Score = " + str(bestScore))
 
+def train_one():
+
+    # os.mkdir("Models/"+FOLDER_NAME)
+
+    net.train()
+    bestScore = sys.maxsize
+    bestEpoch = 0
+    # Loss = ChamferDistance(point_reduction="sum", batch_reduction="mean")
+
+    optimizer = optim.Adam(net.parameters(), lr=LR)
+
+    ValidationScoreArray = []
+    TrainingScoreArray = []
+    print("\nStart training..")
+    for epoch in range(0, 1):
+        print("Epoch "+str(epoch+1)+" Running..")
+        running_loss = 0.0
+        TLoss = 0
+        for i, data in enumerate(TrainLoader, 0):
+            optimizer.zero_grad()
+            imgs, pcs = data
+            imgs = imgs.to(device)
+            pcs = pcs.to(device)
+            res = net(imgs)
+            loss = Chamfer_loss(pcs, res)
+            loss.backward()
+            optimizer.step()
+
+            TLoss += loss.item()
+            running_loss += loss.item()
+            # print(f'[{epoch + 1}, {i + 1:5d}] loss: {loss.item():.7f}')
+            if i % 100 == 99:
+                print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / 100:.7f}')
+                running_loss = 0.0
+        
+        print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / (i%100 + 1):.7f}')
+
+        currentScore = validator()
+        print("At Epoch \"" + str(epoch+1) + "\" Overall Score: " + str(currentScore))
+    #     print("")
+    #     ValidationScoreArray.append(currentScore)
+    #     TrainingScoreArray.append(TLoss)
+    #     if currentScore < bestScore:
+    #         bestScore = currentScore
+    #         # bestEpoch = epoch+1
+    #         print("Saving Model at Epoch "+str(epoch+1)+"...")
+    #         torch.save(
+    #             {   'epoch':epoch, 
+    #                 'classes':CLASSES,
+    #                 "lr":LR,
+    #                 "batch_size":BATCH_SIZE,
+    #                 "score":currentScore,
+    #                 "num_views":NUM_VIEWS,
+    #                 "num_heads":NUM_ENCODER_HEADS,
+    #                 "num_layers":NUM_ENCODER_LAYERS,
+    #                 'model_state_dict': net.state_dict(), 
+    #                 'optimizer_state_dict': optimizer.state_dict()
+    #             },
+    #             "Models/"+FOLDER_NAME+'/bestScore.pth')
+    #         np.save( "Models/"+FOLDER_NAME+"/ValidationScoreArr.npy", np.array(ValidationScoreArray))
+    #         np.save( "Models/"+FOLDER_NAME+"/TrainingScoreArr.npy", np.array(TrainingScoreArray))
+    # print("End training..")
+    # print("best Epoch = " + str(bestEpoch))
+    # print("best Score = " + str(bestScore))
+        
+
 if __name__ == "__main__":
 
-    ShapeNetTrainData = ShapeNetDataset(classes=CLASSES, split="train", transforms=TRANSFORMS)
+    ShapeNetTrainData = ShapeNetDataset(classes=CLASSES, split="train80", transforms=TRANSFORMS)
     TrainLoader = DataLoader(ShapeNetTrainData, batch_size=BATCH_SIZE, shuffle=SHUFFLE, num_workers=WORKERS)
 
-    ShapeNetTestData = ShapeNetDataset(classes=CLASSES, split="val", transforms=TRANSFORMS)
+    ShapeNetTestData = ShapeNetDataset(classes=CLASSES, split="val10", transforms=TRANSFORMS)
     TestLoader = DataLoader(ShapeNetTestData, batch_size=BATCH_SIZE, num_workers=WORKERS)
 
     print("\n--------------- Training ---------------")
@@ -334,10 +400,11 @@ if __name__ == "__main__":
 
     net = Network(num_views=NUM_VIEWS, num_heads=NUM_ENCODER_HEADS, num_layer=NUM_ENCODER_LAYERS).to(device)
 
-    # training(net_)
-    continue_training("10_24_03_49")
+    # train_one()
+    training()
+    # continue_training("10_24_03_49")
     # finetune("10_24_03_49")
-    # validator()
+    # print(validator())
 
     # time1 = time.time()
     # demo(net)

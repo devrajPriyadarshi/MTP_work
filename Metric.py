@@ -6,8 +6,8 @@ from time import time
 
 import torch
 from torchvision.transforms import GaussianBlur
-from pytorch3d.loss import chamfer_distance
-from pytorch3d.transforms import euler_angles_to_matrix
+from Vizualization import euler_angles_to_matrix
+from chamferdist import ChamferDistance as CD_LOSS
 
 from matplotlib import pyplot as plt
 if torch.cuda.is_available():
@@ -21,8 +21,10 @@ class ChamferDistance():
     def __init__(self, point_reduction = "sum", batch_reduction = "mean"):
         self.br = batch_reduction
         self.pr = point_reduction
+        self.chamfer_loss = CD_LOSS()
+
     def __call__(self,input, output):
-        return chamfer_distance(input, output, point_reduction=self.pr, batch_reduction=self.br)[0]
+        return self.chamfer_loss(input, output, bidirectional=True, point_reduction = self.pr, batch_reduction = self.br)
     
 
 class ProjectionLoss(torch.nn.Module):
@@ -152,7 +154,9 @@ class ProjectionLoss(torch.nn.Module):
     
 if __name__ == "__main__":
     PL_Obj = ProjectionLoss(rotations=[[0,0,np.pi/2], [0,0,np.pi/2], [0,0,np.pi/2]])
-    CD_Obj = ChamferDistance()
+    CD_Obj1 = ChamferDistance(point_reduction="mean")
+    CD_Obj2 = ChamferDistance(point_reduction="sum")
+    chamferDist_l = CD_LOSS()
 
     # pc = torch.Tensor(np.load("tests\chair_sample\pointcloud_1024.npy")).to(device)
     # pc2 = torch.Tensor(np.load("tests\chair_sample\pointcloud_1024.npy")).to(device)
@@ -171,28 +175,50 @@ if __name__ == "__main__":
     # print(t3 - t1)
 
     da = np.load("tests\chair_sample\pointcloud_1024.npy")
-    pc3 = torch.Tensor(np.array([da, da,da, da,da, da,da, da, da, da,da, da,da, da,da, da, da, da,da, da,da, da,da, da, da, da,da, da,da, da,da, da])).to(device)
-    pc4 = torch.Tensor(np.array([da, da,da, da,da, da,da, da, da, da,da, da,da, da,da, da, da, da,da, da,da, da,da, da, da, da,da, da,da, da,da, da])).to(device)
+    # pc3 = torch.Tensor(np.array([da, da,da, da,da, da,da, da, da, da,da, da,da, da,da, da, da, da,da, da,da, da,da, da, da, da,da, da,da, da,da, da])).to(device)
+    # pc4 = torch.Tensor(np.array([da, da,da, da,da, da,da, da, da, da,da, da,da, da,da, da, da, da,da, da,da, da,da, da, da, da,da, da,da, da,da, da])).to(device)
+    pc3 = torch.Tensor(np.array([da, da])).to(device)
+    pc4 = torch.Tensor(np.array([da, da])).to(device)
     pc4 = pc4 + (0.0001**0.5)*torch.rand(pc4.shape).to(device)
+    loss_py3d1 = CD_Obj1(pc3, pc4)
+    loss_py3d2 = CD_Obj2(pc3, pc4)
+    # loss_cd = chamferDist_l(pc3, pc4)
+    # loss_cd_bi = chamferDist_l(pc3, pc4, bidirectional = True)
+
+    print(loss_py3d1)
+    print(loss_py3d2)
+    # print(loss_cd)
+    # print(loss_cd_bi)
     
-    t1 = time()
-    loss1 = PL_Obj(pc3, pc4)
-    loss1 = PL_Obj(pc3, pc4)
-    loss1 = PL_Obj(pc3, pc4)
-    loss1 = PL_Obj(pc3, pc4)
-    loss1 = PL_Obj(pc3, pc4)
-    loss1 = PL_Obj(pc3, pc4)
-    loss1 = PL_Obj(pc3, pc4)
-    loss1 = PL_Obj(pc3, pc4)
-    t2 = time()
-    # loss2 = CD_Obj(pc3, pc4)
-    t3 = time()
     
-    print(loss1)
+    # da = np.load("tests\chair_sample\pointcloud_1024.npy")
+    # pc3 = torch.Tensor(np.array([da, da])).to(device)
+    # pc4 = torch.Tensor(np.array([da, da])).to(device)
+    # pc4 = pc4 + (0.0001**0.5)*torch.rand(pc4.shape).to(device)
+    # # loss_py3d = CD_Obj(pc3, pc4)
+    # loss_cd = chamferDist_l(pc3, pc4)
+    # loss_cd_bi = chamferDist_l(pc3, pc4, bidirectional = True)
+
+    # print(loss_py3d)
+    # print(loss_cd)
+    # print(loss_cd_bi)
+    
+    # t1 = time()
+    # # loss1 = PL_Obj(pc3, pc4)
+    # # loss1 = PL_Obj(pc3, pc4)
+    # # loss1 = PL_Obj(pc3, pc4)
+    # # loss1 = PL_Obj(pc3, pc4)
+    # # loss1 = PL_Obj(pc3, pc4)
+    # # loss1 = PL_Obj(pc3, pc4)
+    # # loss1 = PL_Obj(pc3, pc4)
+    # # loss1 = PL_Obj(pc3, pc4)
+    # t2 = time()
+    # # loss2 = CD_Obj(pc3, pc4)
+    # t3 = time()
     # print(loss2)
 
-    print(t2 - t1)
-    print(t3 - t1)
+    # print(t2 - t1)
+    # print(t3 - t1)
 
 #     # img = (obj.projectImg(pc, eul=[0,0,0])).cpu().numpy()
 #     # fig = plt.figure()

@@ -9,7 +9,7 @@ from numpy import ndarray
 import torch
 import torchvision.transforms as TF
 
-from pytorch3d.transforms import euler_angles_to_matrix
+from Vizualization import euler_angles_to_matrix
 
 if torch.cuda.is_available():
     device = torch.device("cuda:0")

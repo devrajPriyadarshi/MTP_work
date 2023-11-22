@@ -7,9 +7,9 @@ import numpy.typing as npt
 import matplotlib.pyplot as plt
 
 import torch
-from pytorch3d.structures import Pointclouds
-from pytorch3d.transforms import euler_angles_to_matrix
-from pytorch3d.renderer import look_at_view_transform, FoVPerspectiveCameras, PointsRasterizationSettings, PointsRenderer, PointsRasterizer, AlphaCompositor
+# from pytorch3d.structures import Pointclouds
+# from pytorch3d.transforms import euler_angles_to_matrix
+# from pytorch3d.renderer import look_at_view_transform, FoVPerspectiveCameras, PointsRasterizationSettings, PointsRenderer, PointsRasterizer, AlphaCompositor
 
 from shapenet_taxonomy import shapenet_category_to_id as ID
 from MitsubaRendering import ImageFromNumpyArr
@@ -30,155 +30,155 @@ if torch.cuda.is_available():
 else:
     device = torch.device("cpu")
 
-class Vizualize_1:
+# class Vizualize_1:
     
-    def __call__(self, rgbImg:npt.ArrayLike , pointcloud: npt.ArrayLike, img_metadata: list) -> plt:
+#     def __call__(self, rgbImg:npt.ArrayLike , pointcloud: npt.ArrayLike, img_metadata: list) -> plt:
         
-        azimuthal, elevation, inPlaneRotation, distance, fov = img_metadata
+#         azimuthal, elevation, inPlaneRotation, distance, fov = img_metadata
 
-        rot = euler_angles_to_matrix(torch.Tensor([0,0,np.pi/2]).to(device), "XYZ")
-        center = np.array([ (np.min(pointcloud[:,0]) + np.max(pointcloud[:,0])) / 2 ,
-                            (np.min(pointcloud[:,1]) + np.max(pointcloud[:,1])) / 2 ,
-                            (np.min(pointcloud[:,2]) + np.max(pointcloud[:,2])) / 2 ])
+#         rot = euler_angles_to_matrix(torch.Tensor([0,0,np.pi/2]).to(device), "XYZ")
+#         center = np.array([ (np.min(pointcloud[:,0]) + np.max(pointcloud[:,0])) / 2 ,
+#                             (np.min(pointcloud[:,1]) + np.max(pointcloud[:,1])) / 2 ,
+#                             (np.min(pointcloud[:,2]) + np.max(pointcloud[:,2])) / 2 ])
 
-        verts = torch.Tensor(np.array([pointcloud - center])).to(device)
-        feat = torch.Tensor(np.ones(verts.shape)*255).to(device)
-        point_cloud = Pointclouds(points=verts@rot, features=feat)
+#         verts = torch.Tensor(np.array([pointcloud - center])).to(device)
+#         feat = torch.Tensor(np.ones(verts.shape)*255).to(device)
+#         point_cloud = Pointclouds(points=verts@rot, features=feat)
 
-        R, T = look_at_view_transform(dist=7, elev=elevation, azim=-azimuthal, degrees=True)
-        cameras = FoVPerspectiveCameras(znear=0.01,fov=10, R=R, T=T, device=device)
+#         R, T = look_at_view_transform(dist=7, elev=elevation, azim=-azimuthal, degrees=True)
+#         cameras = FoVPerspectiveCameras(znear=0.01,fov=10, R=R, T=T, device=device)
 
-        raster_settings = PointsRasterizationSettings(
-            image_size=512, 
-            radius = 0.005,
-            points_per_pixel = 100
-        )
-        rasterizer = PointsRasterizer(cameras=cameras, raster_settings=raster_settings)
-        renderer = PointsRenderer(rasterizer=rasterizer, compositor=AlphaCompositor())
+#         raster_settings = PointsRasterizationSettings(
+#             image_size=512, 
+#             radius = 0.005,
+#             points_per_pixel = 100
+#         )
+#         rasterizer = PointsRasterizer(cameras=cameras, raster_settings=raster_settings)
+#         renderer = PointsRenderer(rasterizer=rasterizer, compositor=AlphaCompositor())
 
-        pc_img = renderer(point_cloud)[0, ..., :3].cpu().numpy()
+#         pc_img = renderer(point_cloud)[0, ..., :3].cpu().numpy()
         
-        alpha = np.sum(rgbImg, axis=-1) > 0
-        alpha = np.uint8(alpha * 255)
-        res = np.dstack((rgbImg, alpha))
+#         alpha = np.sum(rgbImg, axis=-1) > 0
+#         alpha = np.uint8(alpha * 255)
+#         res = np.dstack((rgbImg, alpha))
 
-        plt.figure(figsize=(10, 5))
+#         plt.figure(figsize=(10, 5))
 
-        plt.subplot(121)
-        plt.imshow(rgbImg)
-        plt.axis("off")
+#         plt.subplot(121)
+#         plt.imshow(rgbImg)
+#         plt.axis("off")
 
-        plt.subplot(122)
-        plt.imshow(pc_img/np.max(pc_img))
-        plt.axis("off")
-        plt.tight_layout()
+#         plt.subplot(122)
+#         plt.imshow(pc_img/np.max(pc_img))
+#         plt.axis("off")
+#         plt.tight_layout()
 
-        return plt
+#         return plt
 
-def Vizualize_all(rgbImgs:torch.Tensor , pointcloud: torch.Tensor) -> plt:
-    """
-    Input:
-        rgbImgs: a torch tensor of Nx3xHxW shape. N multiview images of object.
-        pointcloud: a torch tensor of Mx3 shape.
-    Output:
-        plt: matplotlib.pyplot obj
+# def Vizualize_all(rgbImgs:torch.Tensor , pointcloud: torch.Tensor) -> plt:
+#     """
+#     Input:
+#         rgbImgs: a torch tensor of Nx3xHxW shape. N multiview images of object.
+#         pointcloud: a torch tensor of Mx3 shape.
+#     Output:
+#         plt: matplotlib.pyplot obj
 
-    Minimum N = 2.
-    """
+#     Minimum N = 2.
+#     """
 
-    # Pointcloud Processing
-    azimuthal, elevation = 30, 30
-    verts = torch.Tensor(np.array([pointcloud.cpu().numpy()])).to(device)
-    feat = torch.Tensor(np.ones(verts.shape)*255).to(device)
-    point_cloud = Pointclouds(points=verts, features=feat)
+#     # Pointcloud Processing
+#     azimuthal, elevation = 30, 30
+#     verts = torch.Tensor(np.array([pointcloud.cpu().numpy()])).to(device)
+#     feat = torch.Tensor(np.ones(verts.shape)*255).to(device)
+#     point_cloud = Pointclouds(points=verts, features=feat)
 
-    R, T = look_at_view_transform(dist=7, elev=elevation, azim=-azimuthal, degrees=True)
-    cameras = FoVPerspectiveCameras(znear=0.01,fov=10, R=R, T=T, device=device)
+#     R, T = look_at_view_transform(dist=7, elev=elevation, azim=-azimuthal, degrees=True)
+#     cameras = FoVPerspectiveCameras(znear=0.01,fov=10, R=R, T=T, device=device)
 
-    raster_settings = PointsRasterizationSettings(
-        image_size=512, 
-        radius = 0.005,
-        points_per_pixel = 100
-    )
-    rasterizer = PointsRasterizer(cameras=cameras, raster_settings=raster_settings)
-    renderer = PointsRenderer(rasterizer=rasterizer, compositor=AlphaCompositor())
+#     raster_settings = PointsRasterizationSettings(
+#         image_size=512, 
+#         radius = 0.005,
+#         points_per_pixel = 100
+#     )
+#     rasterizer = PointsRasterizer(cameras=cameras, raster_settings=raster_settings)
+#     renderer = PointsRenderer(rasterizer=rasterizer, compositor=AlphaCompositor())
 
-    pc_img = renderer(point_cloud)[0, ..., :3].cpu().numpy()
+#     pc_img = renderer(point_cloud)[0, ..., :3].cpu().numpy()
 
-    # Images Processing
-    imgs_N = rgbImgs.shape[0]
+#     # Images Processing
+#     imgs_N = rgbImgs.shape[0]
 
-    plt.figure(figsize=(10, 5))
-    for _ in range(1,imgs_N+1):
-        plt.subplot(100+(imgs_N+1)*10+_)
-        plt.imshow(rgbImgs[_-1].permute(1,2,0))
-        plt.axis("off")
-    plt.subplot(100+(imgs_N+1)*10+(imgs_N+1))
-    plt.imshow(pc_img/np.max(pc_img))
-    plt.axis("off")
-    plt.tight_layout()
+#     plt.figure(figsize=(10, 5))
+#     for _ in range(1,imgs_N+1):
+#         plt.subplot(100+(imgs_N+1)*10+_)
+#         plt.imshow(rgbImgs[_-1].permute(1,2,0))
+#         plt.axis("off")
+#     plt.subplot(100+(imgs_N+1)*10+(imgs_N+1))
+#     plt.imshow(pc_img/np.max(pc_img))
+#     plt.axis("off")
+#     plt.tight_layout()
 
-    return plt
+#     return plt
 
-def ComparePointClouds(pc1: torch.Tensor, pc2: torch.Tensor) -> plt:
-    """
-    Input:
-        pc1: a torch tensor of Nx3 shape. N Points.
-        pc2: a torch tensor of Nx3 shape. N Points.
-    Output:
-        plt: matplotlib.pyplot obj
-    """
+# def ComparePointClouds(pc1: torch.Tensor, pc2: torch.Tensor) -> plt:
+#     """
+#     Input:
+#         pc1: a torch tensor of Nx3 shape. N Points.
+#         pc2: a torch tensor of Nx3 shape. N Points.
+#     Output:
+#         plt: matplotlib.pyplot obj
+#     """
 
-    # Pointcloud Processing
-    azimuthal, elevation = 30, 30
-    verts = torch.Tensor(np.array([pc1.cpu().detach().numpy()])).to(device)
-    feat = torch.Tensor(np.ones(verts.shape)*255).to(device)
-    point_cloud = Pointclouds(points=verts, features=feat)
+#     # Pointcloud Processing
+#     azimuthal, elevation = 30, 30
+#     verts = torch.Tensor(np.array([pc1.cpu().detach().numpy()])).to(device)
+#     feat = torch.Tensor(np.ones(verts.shape)*255).to(device)
+#     point_cloud = Pointclouds(points=verts, features=feat)
 
-    R, T = look_at_view_transform(dist=7, elev=elevation, azim=-azimuthal, degrees=True)
-    cameras = FoVPerspectiveCameras(znear=0.01,fov=10, R=R, T=T, device=device)
+#     R, T = look_at_view_transform(dist=7, elev=elevation, azim=-azimuthal, degrees=True)
+#     cameras = FoVPerspectiveCameras(znear=0.01,fov=10, R=R, T=T, device=device)
 
-    raster_settings = PointsRasterizationSettings(
-        image_size=512, 
-        radius = 0.005,
-        points_per_pixel = 100
-    )
-    rasterizer = PointsRasterizer(cameras=cameras, raster_settings=raster_settings)
-    renderer = PointsRenderer(rasterizer=rasterizer, compositor=AlphaCompositor())
+#     raster_settings = PointsRasterizationSettings(
+#         image_size=512, 
+#         radius = 0.005,
+#         points_per_pixel = 100
+#     )
+#     rasterizer = PointsRasterizer(cameras=cameras, raster_settings=raster_settings)
+#     renderer = PointsRenderer(rasterizer=rasterizer, compositor=AlphaCompositor())
 
-    pc_img = renderer(point_cloud)[0, ..., :3].cpu().numpy()
+#     pc_img = renderer(point_cloud)[0, ..., :3].cpu().numpy()
 
-    verts = torch.Tensor(np.array([pc2.cpu().detach().numpy()])).to(device)
-    feat = torch.Tensor(np.ones(verts.shape)*255).to(device)
-    point_cloud = Pointclouds(points=verts, features=feat)
+#     verts = torch.Tensor(np.array([pc2.cpu().detach().numpy()])).to(device)
+#     feat = torch.Tensor(np.ones(verts.shape)*255).to(device)
+#     point_cloud = Pointclouds(points=verts, features=feat)
 
-    R, T = look_at_view_transform(dist=7, elev=elevation, azim=-azimuthal, degrees=True)
-    cameras = FoVPerspectiveCameras(znear=0.01,fov=10, R=R, T=T, device=device)
+#     R, T = look_at_view_transform(dist=7, elev=elevation, azim=-azimuthal, degrees=True)
+#     cameras = FoVPerspectiveCameras(znear=0.01,fov=10, R=R, T=T, device=device)
 
-    raster_settings = PointsRasterizationSettings(
-        image_size=512, 
-        radius = 0.005,
-        points_per_pixel = 100
-    )
-    rasterizer = PointsRasterizer(cameras=cameras, raster_settings=raster_settings)
-    renderer = PointsRenderer(rasterizer=rasterizer, compositor=AlphaCompositor())
+#     raster_settings = PointsRasterizationSettings(
+#         image_size=512, 
+#         radius = 0.005,
+#         points_per_pixel = 100
+#     )
+#     rasterizer = PointsRasterizer(cameras=cameras, raster_settings=raster_settings)
+#     renderer = PointsRenderer(rasterizer=rasterizer, compositor=AlphaCompositor())
 
-    pc_img2 = renderer(point_cloud)[0, ..., :3].cpu().numpy()
+#     pc_img2 = renderer(point_cloud)[0, ..., :3].cpu().numpy()
 
 
-    plt.figure(figsize=(10, 5))
+#     plt.figure(figsize=(10, 5))
 
-    plt.subplot(121)
-    plt.imshow(pc_img/np.max(pc_img))
-    plt.axis("off")
+#     plt.subplot(121)
+#     plt.imshow(pc_img/np.max(pc_img))
+#     plt.axis("off")
     
-    plt.subplot(122)
-    plt.imshow(pc_img2/np.max(pc_img2))
-    plt.axis("off")
+#     plt.subplot(122)
+#     plt.imshow(pc_img2/np.max(pc_img2))
+#     plt.axis("off")
     
-    plt.tight_layout()
+#     plt.tight_layout()
 
-    return plt
+#     return plt
 
 def ImageFromTensor(pc: torch.Tensor):
     pcl = pc.detach().cpu().numpy()
@@ -189,27 +189,85 @@ def ImageFromNumpy(np_arr):
     img = ImageFromNumpyArr(np_arr)
     return img
 
-if __name__ == "__main__":
+def _axis_angle_rotation(axis: str, angle: torch.Tensor) -> torch.Tensor:
+    """
+    Return the rotation matrices for one of the rotations about an axis
+    of which Euler angles describe, for each value of the angle given.
 
-    file = choice(train_split[choice(classes)])
+    Args:
+        axis: Axis label "X" or "Y or "Z".
+        angle: any shape tensor of Euler angles in radians
 
-    rendering_metadata = open(rend_folder + file + "/rendering/rendering_metadata.txt", "r")
-    metadatas_ = rendering_metadata.read()
-    metadatas = metadatas_.split('\n')[:-1]
-    rendering_metadata.close()
+    Returns:
+        Rotation matrices as tensor of shape (..., 3, 3).
+    """
 
-    renderings = open(rend_folder + file + "/rendering/renderings.txt", "r")
-    renders_ = renderings.read()
-    renders = renders_.split('\n')[:-1]
-    renderings.close()
+    cos = torch.cos(angle)
+    sin = torch.sin(angle)
+    one = torch.ones_like(angle)
+    zero = torch.zeros_like(angle)
 
-    version     = randint(0,len(renders)-1)
+    if axis == "X":
+        R_flat = (one, zero, zero, zero, cos, -sin, zero, sin, cos)
+    elif axis == "Y":
+        R_flat = (cos, zero, sin, zero, one, zero, -sin, zero, cos)
+    elif axis == "Z":
+        R_flat = (cos, -sin, zero, sin, cos, zero, zero, zero, one)
+    else:
+        raise ValueError("letter must be either X, Y or Z.")
 
-    pointcloud  = np.load(pc_folder + file +"/pointcloud_2048.npy")
-    metadata    = list(map(float, metadatas[version].split()))
-    image       = cv2.imread(rend_folder + file + "/rendering/" + renders[version])
+    return torch.stack(R_flat, -1).reshape(angle.shape + (3, 3))
 
-    visualizer = Vizualize_1()
 
-    plot = visualizer(rgbImg=image, pointcloud=pointcloud, img_metadata=metadata)
-    plot.show()
+def euler_angles_to_matrix(euler_angles: torch.Tensor, convention: str) -> torch.Tensor:
+    """
+    Convert rotations given as Euler angles in radians to rotation matrices.
+
+    Args:
+        euler_angles: Euler angles in radians as tensor of shape (..., 3).
+        convention: Convention string of three uppercase letters from
+            {"X", "Y", and "Z"}.
+
+    Returns:
+        Rotation matrices as tensor of shape (..., 3, 3).
+    """
+    if euler_angles.dim() == 0 or euler_angles.shape[-1] != 3:
+        raise ValueError("Invalid input euler angles.")
+    if len(convention) != 3:
+        raise ValueError("Convention must have 3 letters.")
+    if convention[1] in (convention[0], convention[2]):
+        raise ValueError(f"Invalid convention {convention}.")
+    for letter in convention:
+        if letter not in ("X", "Y", "Z"):
+            raise ValueError(f"Invalid letter {letter} in convention string.")
+    matrices = [
+        _axis_angle_rotation(c, e)
+        for c, e in zip(convention, torch.unbind(euler_angles, -1))
+    ]
+    # return functools.reduce(torch.matmul, matrices)
+    return torch.matmul(torch.matmul(matrices[0], matrices[1]), matrices[2])
+
+# if __name__ == "__main__":
+
+#     file = choice(train_split[choice(classes)])
+
+#     rendering_metadata = open(rend_folder + file + "/rendering/rendering_metadata.txt", "r")
+#     metadatas_ = rendering_metadata.read()
+#     metadatas = metadatas_.split('\n')[:-1]
+#     rendering_metadata.close()
+
+#     renderings = open(rend_folder + file + "/rendering/renderings.txt", "r")
+#     renders_ = renderings.read()
+#     renders = renders_.split('\n')[:-1]
+#     renderings.close()
+
+#     version     = randint(0,len(renders)-1)
+
+#     pointcloud  = np.load(pc_folder + file +"/pointcloud_2048.npy")
+#     metadata    = list(map(float, metadatas[version].split()))
+#     image       = cv2.imread(rend_folder + file + "/rendering/" + renders[version])
+
+#     visualizer = Vizualize_1()
+
+#     plot = visualizer(rgbImg=image, pointcloud=pointcloud, img_metadata=metadata)
+#     plot.show()
