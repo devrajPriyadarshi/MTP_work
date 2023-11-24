@@ -1,0 +1,431 @@
+
+--------------- Training ---------------
+
+
+Classes to Train on: 	['chair', 'table']
+
+Device: cuda:1
+
+Train Data Size: 	12229
+Batche Size: 		32
+Batches / Epochs: 	383
+Total Epochs: 		100
+Total Iterations: 	38300
+
+Test Data Size : 	1529
+Batches / Epochs: 	48
+
+Start training..
+Epoch 1 Running..
+Traceback (most recent call last):
+  File "TrainNetwork.py", line 475, in <module>
+    training()
+  File "TrainNetwork.py", line 92, in training
+    res = net(imgs)
+  File "/home1/abhisht/devraj/pytorch_env/lib/python3.6/site-packages/torch/nn/modules/module.py", line 1102, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/home1/abhisht/devraj/MTP_work/Network.py", line 93, in forward
+    x = self.decoder(x)
+  File "/home1/abhisht/devraj/pytorch_env/lib/python3.6/site-packages/torch/nn/modules/module.py", line 1102, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/home1/abhisht/devraj/MTP_work/Network.py", line 81, in forward
+    x = self.Decoder(x)
+  File "/home1/abhisht/devraj/pytorch_env/lib/python3.6/site-packages/torch/nn/modules/module.py", line 1102, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/home1/abhisht/devraj/MTP_work/FoldingNet.py", line 81, in forward
+    recon2 = self.fold2(recon1, x)
+  File "/home1/abhisht/devraj/pytorch_env/lib/python3.6/site-packages/torch/nn/modules/module.py", line 1102, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/home1/abhisht/devraj/MTP_work/FoldingNet.py", line 40, in forward
+    x = self.layers(x)
+  File "/home1/abhisht/devraj/pytorch_env/lib/python3.6/site-packages/torch/nn/modules/module.py", line 1102, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/home1/abhisht/devraj/pytorch_env/lib/python3.6/site-packages/torch/nn/modules/container.py", line 141, in forward
+    input = module(input)
+  File "/home1/abhisht/devraj/pytorch_env/lib/python3.6/site-packages/torch/nn/modules/module.py", line 1102, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/home1/abhisht/devraj/pytorch_env/lib/python3.6/site-packages/torch/nn/modules/conv.py", line 301, in forward
+    return self._conv_forward(input, self.weight, self.bias)
+  File "/home1/abhisht/devraj/pytorch_env/lib/python3.6/site-packages/torch/nn/modules/conv.py", line 298, in _conv_forward
+    self.padding, self.dilation, self.groups)
+RuntimeError: CUDA out of memory. Tried to allocate 64.00 MiB (GPU 1; 10.76 GiB total capacity; 1.88 GiB already allocated; 5.69 MiB free; 1.91 GiB reserved in total by PyTorch) If reserved memory is >> allocated memory try setting max_split_size_mb to avoid fragmentation.  See documentation for Memory Management and PYTORCH_CUDA_ALLOC_CONF
+
+--------------- Training ---------------
+
+
+Classes to Train on: 	['chair', 'table']
+
+Device: cuda:1
+
+Train Data Size: 	12229
+Batche Size: 		32
+Batches / Epochs: 	383
+Total Epochs: 		100
+Total Iterations: 	38300
+
+Test Data Size : 	1529
+Batches / Epochs: 	48
+
+Start training..
+Epoch 1 Running..
+[1,   100] loss: 298.5472374
+[1,   200] loss: 176.1819537
+[1,   300] loss: 155.2664572
+[1,   383] loss: 141.8484410
+
+Running Validator...
+At Epoch "1" Overall Score: 6637.275039672852
+
+Saving Model at Epoch 1...
+Epoch 2 Running..
+[2,   100] loss: 133.8507858
+[2,   200] loss: 110.0470754
+[2,   300] loss: 85.4811108
+[2,   383] loss: 70.6203603
+
+Running Validator...
+At Epoch "2" Overall Score: 3276.6837882995605
+
+Saving Model at Epoch 2...
+Epoch 3 Running..
+[3,   100] loss: 61.3321632
+[3,   200] loss: 59.2331062
+[3,   300] loss: 55.1376611
+[3,   383] loss: 55.0376168
+
+Running Validator...
+At Epoch "3" Overall Score: 2610.1219749450684
+
+Saving Model at Epoch 3...
+Epoch 4 Running..
+[4,   100] loss: 53.1781562
+[4,   200] loss: 52.1939963
+[4,   300] loss: 51.0111606
+[4,   383] loss: 49.2638721
+
+Running Validator...
+At Epoch "4" Overall Score: 2366.866268157959
+
+Saving Model at Epoch 4...
+Epoch 5 Running..
+[5,   100] loss: 47.5747004
+[5,   200] loss: 45.3620930
+[5,   300] loss: 41.7220965
+[5,   383] loss: 36.0516749
+
+Running Validator...
+At Epoch "5" Overall Score: 1691.8408966064453
+
+Saving Model at Epoch 5...
+Epoch 6 Running..
+[6,   100] loss: 31.5506824
+[6,   200] loss: 28.9061279
+[6,   300] loss: 26.0887876
+[6,   383] loss: 25.8962734
+
+Running Validator...
+At Epoch "6" Overall Score: 1413.0170097351074
+
+Saving Model at Epoch 6...
+Epoch 7 Running..
+[7,   100] loss: 24.9502401
+[7,   200] loss: 23.6810013
+[7,   300] loss: 23.4664419
+[7,   383] loss: 22.5479797
+
+Running Validator...
+At Epoch "7" Overall Score: 1078.0543632507324
+
+Saving Model at Epoch 7...
+Epoch 8 Running..
+[8,   100] loss: 22.1226158
+[8,   200] loss: 21.7119425
+[8,   300] loss: 21.6219772
+[8,   383] loss: 21.3053312
+
+Running Validator...
+At Epoch "8" Overall Score: 1042.4009037017822
+
+Saving Model at Epoch 8...
+Epoch 9 Running..
+[9,   100] loss: 20.4538360
+[9,   200] loss: 20.7614852
+[9,   300] loss: 21.0945318
+[9,   383] loss: 20.4962482
+
+Running Validator...
+At Epoch "9" Overall Score: 1107.8086776733398
+
+Epoch 10 Running..
+[10,   100] loss: 20.6570378
+[10,   200] loss: 20.0171217
+[10,   300] loss: 20.1625569
+[10,   383] loss: 19.5756938
+
+Running Validator...
+At Epoch "10" Overall Score: 946.5163812637329
+
+Saving Model at Epoch 10...
+Epoch 11 Running..
+[11,   100] loss: 19.4189426
+[11,   200] loss: 19.3609463
+[11,   300] loss: 19.3692266
+[11,   383] loss: 19.2448187
+
+Running Validator...
+At Epoch "11" Overall Score: 951.5999488830566
+
+Epoch 12 Running..
+[12,   100] loss: 18.9835855
+[12,   200] loss: 18.8443723
+[12,   300] loss: 18.8468507
+[12,   383] loss: 18.4497431
+
+Running Validator...
+At Epoch "12" Overall Score: 911.7355909347534
+
+Saving Model at Epoch 12...
+Epoch 13 Running..
+[13,   100] loss: 18.5486133
+[13,   200] loss: 18.8805794
+[13,   300] loss: 18.5640362
+[13,   383] loss: 18.4050231
+
+Running Validator...
+At Epoch "13" Overall Score: 877.7413482666016
+
+Saving Model at Epoch 13...
+Epoch 14 Running..
+[14,   100] loss: 17.7469407
+[14,   200] loss: 17.5896548
+[14,   300] loss: 17.5924791
+[14,   383] loss: 18.1874701
+
+Running Validator...
+At Epoch "14" Overall Score: 904.5925531387329
+
+Epoch 15 Running..
+[15,   100] loss: 17.5397234
+[15,   200] loss: 17.4304095
+[15,   300] loss: 17.4367189
+[15,   383] loss: 16.9115589
+
+Running Validator...
+At Epoch "15" Overall Score: 804.4239044189453
+
+Saving Model at Epoch 15...
+Epoch 16 Running..
+[16,   100] loss: 16.5164317
+[16,   200] loss: 16.3156055
+[16,   300] loss: 16.1166132
+[16,   383] loss: 15.7817466
+
+Running Validator...
+At Epoch "16" Overall Score: 781.2319660186768
+
+Saving Model at Epoch 16...
+Epoch 17 Running..
+[17,   100] loss: 15.4303578
+[17,   200] loss: 15.1752867
+[17,   300] loss: 14.8211498
+[17,   383] loss: 14.3921109
+
+Running Validator...
+At Epoch "17" Overall Score: 727.7459678649902
+
+Saving Model at Epoch 17...
+Epoch 18 Running..
+[18,   100] loss: 14.3232963
+[18,   200] loss: 13.6660163
+[18,   300] loss: 13.6108141
+[18,   383] loss: 13.0511295
+
+Running Validator...
+At Epoch "18" Overall Score: 661.9797925949097
+
+Saving Model at Epoch 18...
+Epoch 19 Running..
+[19,   100] loss: 13.0156025
+[19,   200] loss: 12.4516652
+[19,   300] loss: 11.9842239
+[19,   383] loss: 11.8361419
+
+Running Validator...
+At Epoch "19" Overall Score: 545.40540599823
+
+Saving Model at Epoch 19...
+Epoch 20 Running..
+[20,   100] loss: 11.2362498
+[20,   200] loss: 10.9031918
+[20,   300] loss: 10.6025444
+[20,   383] loss: 10.0128121
+
+Running Validator...
+At Epoch "20" Overall Score: 514.2192716598511
+
+Saving Model at Epoch 20...
+Epoch 21 Running..
+[21,   100] loss: 9.9608871
+[21,   200] loss: 9.1031860
+[21,   300] loss: 8.4772914
+[21,   383] loss: 8.4747016
+
+Running Validator...
+At Epoch "21" Overall Score: 415.5131034851074
+
+Saving Model at Epoch 21...
+Epoch 22 Running..
+[22,   100] loss: 8.1173295
+[22,   200] loss: 7.7753955
+[22,   300] loss: 7.5855771
+[22,   383] loss: 7.3391893
+
+Running Validator...
+At Epoch "22" Overall Score: 381.59022855758667
+
+Saving Model at Epoch 22...
+Epoch 23 Running..
+[23,   100] loss: 7.2311096
+[23,   200] loss: 7.1983241
+[23,   300] loss: 6.8790838
+[23,   383] loss: 6.7658780
+
+Running Validator...
+At Epoch "23" Overall Score: 357.23633003234863
+
+Saving Model at Epoch 23...
+Epoch 24 Running..
+[24,   100] loss: 6.7730658
+[24,   200] loss: 6.5318088
+[24,   300] loss: 6.3121652
+[24,   383] loss: 6.3307412
+
+Running Validator...
+At Epoch "24" Overall Score: 354.61558532714844
+
+Saving Model at Epoch 24...
+Epoch 25 Running..
+[25,   100] loss: 6.4661712
+[25,   200] loss: 6.7749385
+[25,   300] loss: 6.0403228
+[25,   383] loss: 5.9811296
+
+Running Validator...
+At Epoch "25" Overall Score: 352.4139099121094
+
+Saving Model at Epoch 25...
+Epoch 26 Running..
+[26,   100] loss: 6.1057702
+[26,   200] loss: 5.8908485
+[26,   300] loss: 5.8376032
+[26,   383] loss: 5.8011434
+
+Running Validator...
+At Epoch "26" Overall Score: 411.46059226989746
+
+Epoch 27 Running..
+[27,   100] loss: 6.1504747
+[27,   200] loss: 5.4965688
+[27,   300] loss: 5.4567323
+[27,   383] loss: 6.1898685
+
+Running Validator...
+At Epoch "27" Overall Score: 800.9121379852295
+
+Epoch 28 Running..
+[28,   100] loss: 6.3530820
+[28,   200] loss: 5.3737416
+[28,   300] loss: 5.2599410
+[28,   383] loss: 5.3137962
+
+Running Validator...
+At Epoch "28" Overall Score: 271.5277090072632
+
+Saving Model at Epoch 28...
+Epoch 29 Running..
+[29,   100] loss: 5.2376223
+[29,   200] loss: 5.1936885
+[29,   300] loss: 5.5371933
+[29,   383] loss: 5.1972475
+
+Running Validator...
+At Epoch "29" Overall Score: 481.3237018585205
+
+Epoch 30 Running..
+[30,   100] loss: 5.5829723
+[30,   200] loss: 4.9574009
+[30,   300] loss: 4.9174118
+[30,   383] loss: 4.8139393
+
+Running Validator...
+At Epoch "30" Overall Score: 258.659619808197
+
+Saving Model at Epoch 30...
+Epoch 31 Running..
+[31,   100] loss: 4.9376326
+[31,   200] loss: 4.8555124
+[31,   300] loss: 4.8737354
+[31,   383] loss: 5.6652141
+
+Running Validator...
+At Epoch "31" Overall Score: 254.45738697052002
+
+Saving Model at Epoch 31...
+Epoch 32 Running..
+[32,   100] loss: 4.9187831
+[32,   200] loss: 4.7352297
+[32,   300] loss: 4.7332363
+[32,   383] loss: 4.5002574
+
+Running Validator...
+At Epoch "32" Overall Score: 239.97493147850037
+
+Saving Model at Epoch 32...
+Epoch 33 Running..
+[33,   100] loss: 4.5561957
+[33,   200] loss: 4.6028807
+[33,   300] loss: 4.6027819
+[33,   383] loss: 4.7271895
+
+Running Validator...
+At Epoch "33" Overall Score: 236.45194005966187
+
+Saving Model at Epoch 33...
+Epoch 34 Running..
+[34,   100] loss: 4.3818294
+[34,   200] loss: 4.5237421
+[34,   300] loss: 4.5094874
+[34,   383] loss: 4.4476988
+
+Running Validator...
+At Epoch "34" Overall Score: 239.2229745388031
+
+Epoch 35 Running..
+[35,   100] loss: 4.9397678
+[35,   200] loss: 4.4352223
+[35,   300] loss: 4.2647939
+[35,   383] loss: 4.3050783
+
+Running Validator...
+At Epoch "35" Overall Score: 236.51037192344666
+
+Epoch 36 Running..
+[36,   100] loss: 4.3275567
+[36,   200] loss: 4.3257935
+[36,   300] loss: 4.7447302
+[36,   383] loss: 4.2214102
+
+Running Validator...
+At Epoch "36" Overall Score: 210.88836002349854
+
+Saving Model at Epoch 36...
+Epoch 37 Running..
+[37,   100] loss: 4.3071946
+[37,   200] loss: 4.1261865
+[37,   300] loss: 4.0936407
+[37,   383] loss: 4.1755250
+
+Running Validator...
+At Epoch "37" Overall Score: 244.0290539264679
+
+Epoch 38 Running..

@@ -5,6 +5,7 @@ import numpy as np
 from random import sample
 
 import torch
+import torchvision.transforms as tf
 from torch.utils.data import Dataset
 
 from shapenet_taxonomy import shapenet_category_to_id
@@ -36,15 +37,25 @@ class ShapeNetDataset(Dataset):
     
     def __getitem__(self, index):
         gt_pc = fixPointcloudOrientation(torch.from_numpy(np.load(self.root+"ShapeNet_pointclouds/"+self.files[index]+"/pointcloud_1024.npy")))
-        img = np.array([ Image.open(self.root+"ShapeNetRendering/"+self.files[index]+"/rendering/"+ view).convert('RGB') for view in sample(views, self.num_views)])
-        
+        img = [Image.open(self.root+"ShapeNetRendering/"+self.files[index]+"/rendering/"+ view).convert('RGB') for view in sample(views, self.num_views)]
         if self.transforms != None:
-            img = torch.from_numpy(np.array([self.transforms(im) for im in img]))
+            img = [self.transforms(im) for im in img]
+            img_tensor = torch.stack(img, dim = 0)
+        else:
+            img = [tf.ToTensor(im) for im in img]
+            img_tensor = torch.stack(img, dim = 0)
             
-        return img, gt_pc
+        return img_tensor, gt_pc
 
-# data = ShapeNetDataset(classes=["chair"])
-# pc, im = data[0]
+# TRANSFORMS = tf.Compose([   tf.ToTensor(),
+#                             tf.Resize((224,224), antialias=True),
+#                             tf.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+#                         ])
+
+# data = ShapeNetDataset(classes=["chair"], transforms= TRANSFORMS)
+# im, pc = data[0]
+# print(pc)
+# print(im)
 # print(pc.shape)
 # print(im.shape)
 

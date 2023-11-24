@@ -11,14 +11,14 @@ from FoldingNet import Decoder
 
 # from Vizualization import ComparePointClouds
 
-from torchinfo import summary
+# from torchinfo import summary
 
-if torch.cuda.is_available():
-    device = torch.device("cuda:0")
-    # device = torch.device("cpu")
-    torch.cuda.set_device(device)
-else:
-    device = torch.device("cpu")
+# if torch.cuda.is_available():
+#     device = torch.device("cuda:1")
+#     # device = torch.device("cpu")
+#     torch.cuda.set_device(device)
+# else:
+#     device = torch.device("cpu")
 
 class FeatureExtractor(nn.Module):
     """ Input Size =  [BATCH x NUM_VIEWS x C x H x W]
@@ -28,8 +28,9 @@ class FeatureExtractor(nn.Module):
         
         self.NUM_VIEWS = num_views
 
-        VGG16_weights = Models.VGG16_Weights.IMAGENET1K_V1
-        self.VGG16_model = Models.vgg16(weights=VGG16_weights).to(device)
+        # VGG16_weights = Models.VGG16_Weights.IMAGENET1K_V1
+        # self.VGG16_model = Models.vgg16(weights=VGG16_weights).to(device)
+        self.VGG16_model = Models.vgg16(pretrained=True)
 
         for param in self.VGG16_model.parameters():
             param.requires_grad = False
@@ -65,10 +66,10 @@ class ImageEncoder(nn.Module):
 
         return x
 
-    def printSummary(self):
-        summary(self.FeatureExtractor, input_size=(1, self.NUM_VIEWS, 3, 224, 224))
-        summary(self.TransformerEncoderLayer, input_size=(1,self.NUM_VIEWS,self.IMAGE_FEATURE))
-        summary(self.TransformerEncoder     , input_size=(1,self.NUM_VIEWS,self.IMAGE_FEATURE))
+    # def printSummary(self):
+    #     # summary(self.FeatureExtractor, input_size=(1, self.NUM_VIEWS, 3, 224, 224))
+    #     # summary(self.TransformerEncoderLayer, input_size=(1,self.NUM_VIEWS,self.IMAGE_FEATURE))
+    #     # summary(self.TransformerEncoder     , input_size=(1,self.NUM_VIEWS,self.IMAGE_FEATURE))
 
 
 class FoldingDecoder(nn.Module):

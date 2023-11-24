@@ -11,7 +11,7 @@ from chamferdist import ChamferDistance as CD_LOSS
 
 from matplotlib import pyplot as plt
 if torch.cuda.is_available():
-    device = torch.device("cuda:1")
+    device = torch.device("cuda:0")
     # device = torch.device("cpu")
     torch.cuda.set_device(device)
 else:

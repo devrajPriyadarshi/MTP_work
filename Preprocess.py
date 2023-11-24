@@ -2,7 +2,7 @@
 # Maybe to add noise to them -> DONT
 # Maybe to enchance the image
 
-import cv2
+# import cv2
 import numpy as np
 from numpy import ndarray
 
@@ -10,13 +10,6 @@ import torch
 import torchvision.transforms as TF
 
 from Vizualization import euler_angles_to_matrix
-
-if torch.cuda.is_available():
-    device = torch.device("cuda:0")
-    # device = torch.device("cpu")
-    torch.cuda.set_device(device)
-else:
-    device = torch.device("cpu")
 
 def fixPointcloudOrientation(pointcloud: torch.Tensor) -> torch.Tensor:
     pc_numpy = pointcloud.cpu().numpy()

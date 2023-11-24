@@ -1,9 +1,9 @@
 import json
 from random import choice, randint
 
-import cv2
+# import cv2
 import numpy as np
-import numpy.typing as npt
+# import numpy.typing as npt
 import matplotlib.pyplot as plt
 
 import torch
@@ -12,7 +12,7 @@ import torch
 # from pytorch3d.renderer import look_at_view_transform, FoVPerspectiveCameras, PointsRasterizationSettings, PointsRenderer, PointsRasterizer, AlphaCompositor
 
 from shapenet_taxonomy import shapenet_category_to_id as ID
-from MitsubaRendering import ImageFromNumpyArr
+# from MitsubaRendering import ImageFromNumpyArr
 
 pc_folder = "data/ShapeNet/ShapeNet_pointclouds/"
 rend_folder = "data/ShapeNet/ShapeNetRendering/"
@@ -24,7 +24,7 @@ json_file.close()
 classes = [ ID['car'], ID['chair'] ]
 
 if torch.cuda.is_available():
-    device = torch.device("cuda:0")
+    device = torch.device("cuda:1")
     # device = torch.device("cpu")
     torch.cuda.set_device(device)
 else:
@@ -180,14 +180,14 @@ else:
 
 #     return plt
 
-def ImageFromTensor(pc: torch.Tensor):
-    pcl = pc.detach().cpu().numpy()
-    img = ImageFromNumpyArr(pcl)
-    return img.clip(min=0.0, max=1.0)
+# def ImageFromTensor(pc: torch.Tensor):
+#     pcl = pc.detach().cpu().numpy()
+#     img = ImageFromNumpyArr(pcl)
+#     return img.clip(min=0.0, max=1.0)
 
-def ImageFromNumpy(np_arr):
-    img = ImageFromNumpyArr(np_arr)
-    return img
+# def ImageFromNumpy(np_arr):
+#     img = ImageFromNumpyArr(np_arr)
+#     return img
 
 def _axis_angle_rotation(axis: str, angle: torch.Tensor) -> torch.Tensor:
     """

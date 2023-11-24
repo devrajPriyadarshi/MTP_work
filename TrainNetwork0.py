@@ -9,12 +9,12 @@ import torch.optim as optim
 import torchvision.transforms as tf
 from torch.utils.data import DataLoader
 
-from Metric import ChamferDistance, ProjectionLoss
+from Metric0 import ChamferDistance, ProjectionLoss
 from Network import Network
 from DataLoaders import ShapeNetDataset
 
 if torch.cuda.is_available():
-    device = torch.device("cuda:1")
+    device = torch.device("cuda:0")
     # device = torch.device("cpu")
     torch.cuda.set_device(device)
 else:
@@ -324,7 +324,7 @@ def continue_training(model_folder: str):
     net.load_state_dict(modeldata["model_state_dict"])
     
     # Chamfer_loss = ChamferDistance(point_reduction="sum", batch_reduction="mean")    
-    _lr = 1e-7
+    _lr = 1e-5
     _end_epoch = modeldata["epoch"] + 100
     optimizer = optim.Adam(net.parameters(), lr=_lr)
     # optimizer.load_state_dict(modeldata["optimizer_state_dict"])
@@ -554,6 +554,6 @@ if __name__ == "__main__":
 
     # training()
 
-    _fold = "10_24_03_25"
+    _fold = "10_24_18_25"
     continue_training(_fold)
     # finetune(_fold)
