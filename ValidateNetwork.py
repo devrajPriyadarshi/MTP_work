@@ -4,13 +4,13 @@ import torch
 import torchvision.transforms as tf
 from torch.utils.data import DataLoader
 
-from Metric import ChamferDistance, ProjectionLoss
+from Metric0 import ChamferDistance, ProjectionLoss
 from Network import Network
 from DataLoaders import ShapeNetDataset
 
 import matplotlib.pyplot as plt
 
-from Vizualization import ComparePointClouds, ImageFromTensor, ImageFromNumpy
+from Vizualization import ImageFromTensor
 
 if torch.cuda.is_available():
     device = torch.device("cuda:0")
@@ -46,7 +46,7 @@ if __name__ == "__main__":
 
     model_folder = "10_24_03_49"
 
-    ModelData = torch.load("Models/"+model_folder+"/bestScore.pth")
+    ModelData = torch.load("Models/"+model_folder+"/fin3.pth", map_location=device)
     trainLoss = np.load("Models/"+model_folder+"/TrainingScoreArr.npy")
     valLoss = np.load("Models/"+model_folder+"/ValidationScoreArr.npy")
     assert len(trainLoss) == len(valLoss)
@@ -62,14 +62,14 @@ if __name__ == "__main__":
 
     END_EPOCH = ModelData['epoch']+1
     LR = ModelData["lr"]
-    epochLable = np.arange(1,END_EPOCH+1)
+    epochLable = np.arange(1,len(trainLoss)+1)
 
     ShapeNetTrainData = ShapeNetDataset(classes=CLASSES, split="train", transforms=TRANSFORMS)
-    ShapeNetTestData = ShapeNetDataset(classes=CLASSES, split="val", transforms=TRANSFORMS)
+    ShapeNetTestData = ShapeNetDataset(classes=CLASSES, split="val10", transforms=TRANSFORMS)
     TestLoader = DataLoader(ShapeNetTestData, batch_size=BATCH_SIZE, shuffle=SHUFFLE, num_workers=WORKERS)
 
-    ShapeNetTestChairData = ShapeNetDataset(classes=["chair"], split="val", transforms=TRANSFORMS)
-    ShapeNetTestTableData = ShapeNetDataset(classes=["table"], split="val", transforms=TRANSFORMS)
+    ShapeNetTestChairData = ShapeNetDataset(classes=["chair"], split="test10", transforms=TRANSFORMS)
+    ShapeNetTestTableData = ShapeNetDataset(classes=["table"], split="test10", transforms=TRANSFORMS)
 
     print("\n--------------- Validating ---------------")
 

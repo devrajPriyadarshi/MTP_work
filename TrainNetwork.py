@@ -187,7 +187,7 @@ def finetune(model_folder: str):
     print("Last Epoch: ", bestEpoch+1)
     net.load_state_dict(modeldata["model_state_dict"])
 
-    _lr = 1e-7
+    _lr = 1e-5
     _alpha = 1
     _beta = 0.5
     _end_epoch = modeldata["epoch"] + 50

@@ -11,7 +11,7 @@ from Network import Network
 from DataLoaders import ShapeNetDataset
 
 if torch.cuda.is_available():
-    device = torch.device("cuda:1")
+    device = torch.device("cuda:0")
     # device = torch.device("cpu")
     torch.cuda.set_device(device)
 else:
@@ -24,12 +24,11 @@ TRANSFORMS = tf.Compose([   tf.ToTensor(),
 
 if __name__ == "__main__":
 
-    model_folder = "10_24_03_49"
+    # model_folder = "10_24_03_49"
+    model_folder = "11_23_18_25"
 
-    ModelData = torch.load("Models/"+model_folder+"/bestScore.pth")
-    # trainLoss = np.load("Models/"+model_folder+"/TrainingScoreArr.npy")
-    # valLoss = np.load("Models/"+model_folder+"/ValidationScoreArr.npy")
-    # assert len(trainLoss) == len(valLoss)
+    # ModelData = torch.load("Models/"+model_folder+"/bestScore_finetuned.pth", map_location=device)
+    ModelData = torch.load("Models/"+model_folder+"/bestScore.pth", map_location=device)
 
     BATCH_SIZE = ModelData["batch_size"]
     CLASSES = ModelData["classes"]
@@ -44,15 +43,14 @@ if __name__ == "__main__":
     LR = ModelData["lr"]
     epochLable = np.arange(1,END_EPOCH+1)
 
-    ShapeNetTestChairData = ShapeNetDataset(classes=["chair"], split="val", transforms=TRANSFORMS)
-    ShapeNetTestTableData = ShapeNetDataset(classes=["table"], split="val", transforms=TRANSFORMS)
+    ShapeNetTestChairData = ShapeNetDataset(classes=["chair"], split="test10", transforms=TRANSFORMS)
+    ShapeNetTestTableData = ShapeNetDataset(classes=["table"], split="test10", transforms=TRANSFORMS)
 
     print("\n--------------- Codeword Clustering ---------------")
 
     print("\nDevice : " , device)
     print("\nChair Test Data Size : \t" + str(len(ShapeNetTestChairData)))
     print("Table Test Data Size : \t" + str(len(ShapeNetTestTableData)))
-    # print("Batches / Epochs: \t" + str(len(TestLoader)))
     print("")
     print("Classes: ", CLASSES)
     print("Batch Size: ", BATCH_SIZE)
@@ -69,27 +67,26 @@ if __name__ == "__main__":
     net = net.to(device)
     net.eval()
 
+    codewords = []
+    for x in tqdm(range(0, len(ShapeNetTestChairData))):
+        img, pc = ShapeNetTestChairData[x]
+        img = img.unsqueeze(0).to(device)
+        # pc = pc.to(device)
+        res = net.encoder(img)
+        codewords.append(res.detach().squeeze().cpu().numpy())
 
-    # codewords = []
-    # for x in tqdm(range(0, len(ShapeNetTestChairData))):
-    #     img, pc = ShapeNetTestChairData[x]
-    #     img = img.unsqueeze(0).to(device)
-    #     # pc = pc.to(device)
-    #     res = net.encoder(img)
-    #     codewords.append(res.detach().squeeze().cpu().numpy())
+    for x in tqdm(range(0, len(ShapeNetTestTableData))):
+        img, pc = ShapeNetTestTableData[x]
+        img = img.unsqueeze(0).to(device)
+        # pc = pc.to(device)
+        res = net.encoder(img)
+        codewords.append(res.detach().squeeze().cpu().numpy())
 
-    # for x in tqdm(range(0, len(ShapeNetTestTableData))):
-    #     img, pc = ShapeNetTestTableData[x]
-    #     img = img.unsqueeze(0).to(device)
-    #     # pc = pc.to(device)
-    #     res = net.encoder(img)
-    #     codewords.append(res.detach().squeeze().cpu().numpy())
-
-    # codewords = np.array(codewords)
+    codewords = np.array(codewords)
 
     # np.save("Models/"+model_folder+"/codewords.npy", codewords)
     
-    codewords = np.load("Models/"+model_folder+"/codewords.npy")
+    # codewords = np.load("Models/"+model_folder+"/codewords.npy")
 
     # # PCA
     # pca = PCA(n_components=2)
@@ -123,4 +120,5 @@ if __name__ == "__main__":
     plt.scatter(table_x, table_y, s=15, c="r", alpha=0.3)
     plt.legend(["chair","table"])
     # plt.show()
-    plt.savefig("Results/" + model_folder + "/codeword_clustering.png")
+    # plt.savefig("Results/" + model_folder + "/bestScore_finetuned/codeword_clustering.png")
+    plt.savefig("Results/" + model_folder + "/bestScore/codeword_clustering.png")

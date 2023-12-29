@@ -42,7 +42,8 @@ class ShapeNetDataset(Dataset):
             img = [self.transforms(im) for im in img]
             img_tensor = torch.stack(img, dim = 0)
         else:
-            img = [tf.ToTensor(im) for im in img]
+            toTen = tf.ToTensor()
+            img = [toTen(im) for im in img]
             img_tensor = torch.stack(img, dim = 0)
             
         return img_tensor, gt_pc

@@ -1,6 +1,6 @@
 import numpy as np
 from random import sample
-from PIL import Image
+from tqdm import tqdm
 import torch
 import torchvision.transforms as tf
 
@@ -10,9 +10,10 @@ import matplotlib.pyplot as plt
 
 from Preprocess import fixPointcloudOrientation
 from Vizualization import ImageFromTensor
+from DataLoaders import ShapeNetDataset
 
 if torch.cuda.is_available():
-    device = torch.device("cuda:1")
+    device = torch.device("cuda:0")
     # device = torch.device("cpu")
     torch.cuda.set_device(device)
 else:
@@ -28,8 +29,11 @@ TRANSFORMS = tf.Compose([   tf.ToTensor(),
 if __name__ == "__main__":
 
     model_folder = "10_24_03_49"
+    # model_folder = "11_23_18_25"
 
-    ModelData = torch.load("Models/"+model_folder+"/bestScore.pth")
+    # ModelData = torch.load("Models/"+model_folder+"/bestScore.pth", map_location=device)
+    
+    ModelData = torch.load("Models/"+model_folder+"/bestScore_finetuned.pth", map_location=device)
     trainLoss = np.load("Models/"+model_folder+"/TrainingScoreArr.npy")
     valLoss = np.load("Models/"+model_folder+"/ValidationScoreArr.npy")
     assert len(trainLoss) == len(valLoss)
@@ -47,61 +51,193 @@ if __name__ == "__main__":
     net = net.to(device)
     net.eval()
 
-    chair_pc_Tensor = fixPointcloudOrientation(torch.Tensor(np.load("tests/chair_sample/pointcloud_1024.npy")))
-    chair_img_Tensor = np.array([Image.open("tests/chair_sample/rendering/"+ view).convert('RGB') for view in sample(views, NUM_VIEWS)])
-    chair_img_Tensor = torch.from_numpy(np.array([TRANSFORMS(im) for im in chair_img_Tensor]))
+    chair_data = ShapeNetDataset(classes=['chair'], split="val10", transforms=TRANSFORMS)
+    table_data = ShapeNetDataset(classes=['table'], split="val10", transforms=TRANSFORMS)
     
-    table_pc_Tensor = fixPointcloudOrientation(torch.Tensor(np.load("tests/table_sample/pointcloud_1024.npy")))
-    table_img_Tensor = np.array([Image.open("tests/table_sample/rendering/"+ view).convert('RGB') for view in sample(views, NUM_VIEWS)])
-    table_img_Tensor = torch.from_numpy(np.array([TRANSFORMS(im) for im in table_img_Tensor]))
+    table1_img , table1_pc = table_data[339] # normal
+    table2_img , table2_pc = table_data[778] # circle
+    table3_img , table3_pc = table_data[797] # short
+
+    chair1_img , chair1_pc = chair_data[374] # down-low
+    chair2_img , chair2_pc = chair_data[358] # big
+    chair3_img , chair3_pc = chair_data[192] # normal
+
+    chair1_img = chair1_img.unsqueeze(0).to(device)
+    chair2_img = chair2_img.unsqueeze(0).to(device)
+    chair3_img = chair3_img.unsqueeze(0).to(device)
+    # chair1_pc = chair1_pc.unsqueeze(0).to(device)
+    # chair2_pc = chair2_pc.unsqueeze(0).to(device)
+    # chair3_pc = chair3_pc.unsqueeze(0).to(device)
+
+    table1_img = table1_img.unsqueeze(0).to(device)
+    table2_img = table2_img.unsqueeze(0).to(device)
+    table3_img = table3_img.unsqueeze(0).to(device)
+    # table1_pc = table1_pc.unsqueeze(0).to(device)
+    # table2_pc = table2_pc.unsqueeze(0).to(device)
+    # table3_pc = table3_pc.unsqueeze(0).to(device)
+
+
+    # table -> chair 1
+    pred_chair1 = net.encoder(chair1_img)
+    pred_chair2 = net.encoder(chair2_img)
+    pred_chair3 = net.encoder(chair3_img)
     
-    chair_img_features = net.encoder(chair_img_Tensor.unsqueeze(0).to(device))
-    chair_predicted_pc = torch.transpose(net.decoder(chair_img_features), 1, 2)
+    pred_table1 = net.encoder(table1_img)
+    pred_table2 = net.encoder(table2_img)
+    pred_table3 = net.encoder(table3_img)
+    
+    weights = [2/6, 2.334/6, 2.667/6, 3/6, 3.334/6, 3.667/6, 4/6]
 
-    table_img_features = net.encoder(table_img_Tensor.unsqueeze(0).to(device))
-    table_predicted_pc = torch.transpose(net.decoder(table_img_features), 1, 2)
-
-    # img_chair_predicted_pc = ImageFromTensor(chair_predicted_pc.squeeze(0))
-    # img_table_predicted_pc = ImageFromTensor(table_predicted_pc.squeeze(0))
-    # img_chair_gt_pc = ImageFromTensor(chair_pc_Tensor)
-    # img_table_gt_pc = ImageFromTensor(table_pc_Tensor)
-
-    # print("\nDone!")
-
-    # plt.figure(figsize=(5,5))
-    # plt.subplot(221)
-    # plt.imshow(img_chair_gt_pc)
-    # plt.axis("off")
-    # plt.subplot(222)
-    # plt.imshow(img_table_gt_pc)
-    # plt.axis("off")
-    # plt.subplot(223)
-    # plt.imshow(img_chair_predicted_pc)
-    # plt.axis("off")
-    # plt.subplot(224)
-    # plt.imshow(img_table_predicted_pc)
-    # plt.axis("off")
-    # plt.show()
-
-    weights = list(range(0,11))
     interpolate_tensor = torch.zeros((len(weights), 1000))
-    for x in weights:
-        interpolate_tensor[x] = torch.lerp(chair_img_features, table_img_features, x/10).squeeze(0)
-    
+    for i in range(len(weights)):
+        interpolate_tensor[i] = torch.lerp(pred_chair3, pred_table2, weights[i])
     interpolated_pc = torch.transpose(net.decoder(interpolate_tensor.to(device)), 1, 2)
-
     interpolated_imgs = []
-    for i in weights:
+    for i in tqdm(range(len(weights))):
         img = ImageFromTensor(interpolated_pc[i])
         interpolated_imgs.append(img)
-
-    print("\nDone!")
-
-    fig, axs = plt.subplots(nrows=1, ncols=11, figsize=(11*5, 5))
-    for i in weights:
+    fig, axs = plt.subplots(nrows=1, ncols=len(weights), figsize=(6*5, 5))
+    for i in range(len(weights)):
         axs[i].imshow(interpolated_imgs[i])
         axs[i].axis("off")
-
     plt.tight_layout()
-    plt.savefig("Results/" + model_folder + "/interpolation_result.png")
-    # plt.show()
+    plt.savefig("Results/" + model_folder + "/bestScore_finetuned/ChairToTable1_dettailed.png")
+    # plt.savefig("Results/" + model_folder + "/bestScore/ChairToTable1.png")
+    plt.close()
+
+    interpolate_tensor = torch.zeros((len(weights), 1000))
+    for i in range(len(weights)):
+        interpolate_tensor[i] = torch.lerp(pred_chair1, pred_table3, weights[i])
+    interpolated_pc = torch.transpose(net.decoder(interpolate_tensor.to(device)), 1, 2)
+    interpolated_imgs = []
+    for i in tqdm(range(len(weights))):
+        img = ImageFromTensor(interpolated_pc[i])
+        interpolated_imgs.append(img)
+    fig, axs = plt.subplots(nrows=1, ncols=len(weights), figsize=(6*5, 5))
+    for i in range(len(weights)):
+        axs[i].imshow(interpolated_imgs[i])
+        axs[i].axis("off")
+    plt.tight_layout()
+    plt.savefig("Results/" + model_folder + "/bestScore_finetuned/ChairToTable2_dettailed.png")
+    # plt.savefig("Results/" + model_folder + "/bestScore/ChairToTable2.png")
+    plt.close()
+    
+    interpolate_tensor = torch.zeros((len(weights), 1000))
+    for i in range(len(weights)):
+        interpolate_tensor[i] = torch.lerp(pred_chair2, pred_table1, weights[i])
+    interpolated_pc = torch.transpose(net.decoder(interpolate_tensor.to(device)), 1, 2)
+    interpolated_imgs = []
+    for i in tqdm(range(len(weights))):
+        img = ImageFromTensor(interpolated_pc[i])
+        interpolated_imgs.append(img)
+    fig, axs = plt.subplots(nrows=1, ncols=len(weights), figsize=(6*5, 5))
+    for i in range(len(weights)):
+        axs[i].imshow(interpolated_imgs[i])
+        axs[i].axis("off")
+    plt.tight_layout()
+    plt.savefig("Results/" + model_folder + "/bestScore_finetuned/ChairToTable3_dettailed.png")
+    # plt.savefig("Results/" + model_folder + "/bestScore/ChairToTable3.png")
+    plt.close()
+    
+    interpolate_tensor = torch.zeros((len(weights), 1000))
+    for i in range(len(weights)):
+        interpolate_tensor[i] = torch.lerp(pred_chair1, pred_chair2, weights[i])
+    interpolated_pc = torch.transpose(net.decoder(interpolate_tensor.to(device)), 1, 2)
+    interpolated_imgs = []
+    for i in tqdm(range(len(weights))):
+        img = ImageFromTensor(interpolated_pc[i])
+        interpolated_imgs.append(img)
+    fig, axs = plt.subplots(nrows=1, ncols=len(weights), figsize=(6*5, 5))
+    for i in range(len(weights)):
+        axs[i].imshow(interpolated_imgs[i])
+        axs[i].axis("off")
+    plt.tight_layout()
+    plt.savefig("Results/" + model_folder + "/bestScore_finetuned/ChairToChair1_dettailed.png")
+    # plt.savefig("Results/" + model_folder + "/bestScore/ChairToChair1.png")
+    plt.close()
+
+    interpolate_tensor = torch.zeros((len(weights), 1000))
+    for i in range(len(weights)):
+        interpolate_tensor[i] = torch.lerp(pred_chair2, pred_chair3, weights[i])
+    interpolated_pc = torch.transpose(net.decoder(interpolate_tensor.to(device)), 1, 2)
+    interpolated_imgs = []
+    for i in tqdm(range(len(weights))):
+        img = ImageFromTensor(interpolated_pc[i])
+        interpolated_imgs.append(img)
+    fig, axs = plt.subplots(nrows=1, ncols=len(weights), figsize=(6*5, 5))
+    for i in range(len(weights)):
+        axs[i].imshow(interpolated_imgs[i])
+        axs[i].axis("off")
+    plt.tight_layout()
+    plt.savefig("Results/" + model_folder + "/bestScore_finetuned/ChairToChair2_dettailed.png")
+    # plt.savefig("Results/" + model_folder + "/bestScore/ChairToChair2.png")
+    plt.close()
+
+    interpolate_tensor = torch.zeros((len(weights), 1000))
+    for i in range(len(weights)):
+        interpolate_tensor[i] = torch.lerp(pred_chair1, pred_chair3, weights[i])
+    interpolated_pc = torch.transpose(net.decoder(interpolate_tensor.to(device)), 1, 2)
+    interpolated_imgs = []
+    for i in tqdm(range(len(weights))):
+        img = ImageFromTensor(interpolated_pc[i])
+        interpolated_imgs.append(img)
+    fig, axs = plt.subplots(nrows=1, ncols=len(weights), figsize=(6*5, 5))
+    for i in range(len(weights)):
+        axs[i].imshow(interpolated_imgs[i])
+        axs[i].axis("off")
+    plt.tight_layout()
+    plt.savefig("Results/" + model_folder + "/bestScore_finetuned/ChairToChair3_dettailed.png")
+    # plt.savefig("Results/" + model_folder + "/bestScore/ChairToChair3.png")
+    plt.close()
+
+    interpolate_tensor = torch.zeros((len(weights), 1000))
+    for i in range(len(weights)):
+        interpolate_tensor[i] = torch.lerp(pred_table1, pred_table2, weights[i])
+    interpolated_pc = torch.transpose(net.decoder(interpolate_tensor.to(device)), 1, 2)
+    interpolated_imgs = []
+    for i in tqdm(range(len(weights))):
+        img = ImageFromTensor(interpolated_pc[i])
+        interpolated_imgs.append(img)
+    fig, axs = plt.subplots(nrows=1, ncols=len(weights), figsize=(6*5, 5))
+    for i in range(len(weights)):
+        axs[i].imshow(interpolated_imgs[i])
+        axs[i].axis("off")
+    plt.tight_layout()
+    plt.savefig("Results/" + model_folder + "/bestScore_finetuned/TableToTable1_dettailed.png")
+    # plt.savefig("Results/" + model_folder + "/bestScore/TableToTable1.png")
+    plt.close()
+
+    interpolate_tensor = torch.zeros((len(weights), 1000))
+    for i in range(len(weights)):
+        interpolate_tensor[i] = torch.lerp(pred_table2, pred_table3, weights[i])
+    interpolated_pc = torch.transpose(net.decoder(interpolate_tensor.to(device)), 1, 2)
+    interpolated_imgs = []
+    for i in tqdm(range(len(weights))):
+        img = ImageFromTensor(interpolated_pc[i])
+        interpolated_imgs.append(img)
+    fig, axs = plt.subplots(nrows=1, ncols=len(weights), figsize=(6*5, 5))
+    for i in range(len(weights)):
+        axs[i].imshow(interpolated_imgs[i])
+        axs[i].axis("off")
+    plt.tight_layout()
+    plt.savefig("Results/" + model_folder + "/bestScore_finetuned/TableToTable2_dettailed.png")
+    # plt.savefig("Results/" + model_folder + "/bestScore/TableToTable2.png")
+    plt.close()
+
+    interpolate_tensor = torch.zeros((len(weights), 1000))
+    for i in range(len(weights)):
+        interpolate_tensor[i] = torch.lerp(pred_table1, pred_table3, weights[i])
+    interpolated_pc = torch.transpose(net.decoder(interpolate_tensor.to(device)), 1, 2)
+    interpolated_imgs = []
+    for i in tqdm(range(len(weights))):
+        img = ImageFromTensor(interpolated_pc[i])
+        interpolated_imgs.append(img)
+    fig, axs = plt.subplots(nrows=1, ncols=len(weights), figsize=(6*5, 5))
+    for i in range(len(weights)):
+        axs[i].imshow(interpolated_imgs[i])
+        axs[i].axis("off")
+    plt.tight_layout()
+    plt.savefig("Results/" + model_folder + "/bestScore_finetuned/TableToTable3_dettailed.png")
+    # plt.savefig("Results/" + model_folder + "/bestScore/TableToTable3.png")
+    plt.close()
+    

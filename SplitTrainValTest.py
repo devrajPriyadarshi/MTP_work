@@ -31,18 +31,20 @@ def get_f(root = "data/ShapeNet/", split = "train", classes = [], num_views = 24
 
     return len(files)
 
-train_split = get_f(classes=['chair', 'table'])
-val_split = get_f(split="val", classes=['chair', 'table'])
+# 'airplane','bench','cabinet','car','chair','lamp','monitor','rifle','sofa','speaker','table','telephone','vessel'
 
-print(train_split)
-print(val_split)
+train_split = get_f(classes=['airplane','bench','cabinet','car','chair','lamp','monitor','rifle','sofa','speaker','table','telephone','vessel'])
+val_split = get_f(split="val", classes=['airplane','bench','cabinet','car','chair','lamp','monitor','rifle','sofa','speaker','table','telephone','vessel'])
+
+# print(train_split)
+# print(val_split)
 
 total = train_split+val_split
 
-print(train_split/total)
-print(val_split/total)
-print(total*0.05)
-print(764/val_split)
+# print(train_split/total)
+# print(val_split/total)
+# print(total*0.05)
+# print(764/val_split)
 
 def split_models(root = "data/ShapeNet/", split = "train", classes = [], num_views = 24, transforms = None):
     
@@ -81,7 +83,7 @@ def split_models(root = "data/ShapeNet/", split = "train", classes = [], num_vie
     return train_dict, test_dict, val_dict
     
 
-train_dict, test_dict, val_dict = split_models(split="val", classes=['chair', 'table'])
+train_dict, test_dict, val_dict = split_models(split="val", classes=['airplane','bench','cabinet','car','chair','lamp','monitor','rifle','sofa','speaker','table','telephone','vessel'])
 
 with open("data/ShapeNet/"+"splits/"+"train80_models.json", "w") as outfile:
     json.dump(train_dict, outfile)

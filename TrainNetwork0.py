@@ -1,3 +1,4 @@
+
 import os
 import sys
 import time
@@ -23,17 +24,17 @@ else:
 dt = datetime.now()
 FOLDER_NAME =  dt.strftime("%m_%d_%H_%M")
 
-BATCH_SIZE = 32
+BATCH_SIZE = 16
 CLASSES = ["chair", "table"]
 NUM_VIEWS = 24
 NUM_ENCODER_LAYERS = 2
-NUM_ENCODER_HEADS = 1
+NUM_ENCODER_HEADS = 4
 
 SHUFFLE = True
 WORKERS = 6
 
-END_EPOCH = 100
-LR = 0.00001
+END_EPOCH = 30
+LR = 0.0001
 
 TRANSFORMS = tf.Compose([   tf.ToTensor(),
                             tf.Resize((224,224), antialias=True),
@@ -70,6 +71,7 @@ def training():
     # Loss = ChamferDistance(point_reduction="sum", batch_reduction="mean")
 
     optimizer = optim.Adam(net.parameters(), lr=LR)
+    scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.95)
 
     ValidationScoreArray = []
     TrainingScoreArray = []
@@ -106,6 +108,7 @@ def training():
                 f.close()
 
                 running_loss = 0.0
+        scheduler.step()
         
         print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / (i%100 + 1):.7f}')
 
@@ -176,30 +179,34 @@ def training():
 
 def finetune(model_folder: str):
 
-    modeldata = torch.load("Models/"+model_folder+"/bestScore.pth")
+    modeldata = torch.load("Models/"+model_folder+"/bestScore.pth", map_location=device)
 
     bestScore = modeldata["score"]
     # bestScore = sys.maxsize
     bestEpoch = modeldata["epoch"]
+
+    bs = bestScore
 
     print("")
     print("Best score: ", bestScore)
     print("Last Epoch: ", bestEpoch+1)
     net.load_state_dict(modeldata["model_state_dict"])
 
-    _lr = 1e-7
+    _lr = 1e-4
     _alpha = 1
-    _beta = 0.5
+    _beta = 1
     _end_epoch = modeldata["epoch"] + 50
 
     # Chamfer_loss = ChamferDistance(point_reduction="sum", batch_reduction="mean")
-    Projection_loss = ProjectionLoss(rotations= [ [np.pi/2, 0, 0], [0, np.pi/2, 0], [0, 0, np.pi/2]],
+    Projection_loss = ProjectionLoss(rotations= [[np.pi/2, 0, 0], [0, np.pi/2, 0], [0, 0, np.pi/2]],
                                      batch_reduction="mean",
                                      view_reduction="sum",
                                      batch_size = BATCH_SIZE)
     
     optimizer = optim.Adam(net.parameters(), lr=_lr)
     # optimizer.load_state_dict(modeldata["optimizer_state_dict"])
+    scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
+
 
     print("\n finetuning network..")
     print("\nTraining on LR: ", _lr)
@@ -214,9 +221,10 @@ def finetune(model_folder: str):
     ValidationScoreArray = np.concatenate((np.load("Models/"+model_folder+"/ValidationScoreArr.npy"), ValidationScoreArray))
     TrainingScoreArray = np.concatenate((np.load("Models/"+model_folder+"/TrainingScoreArr.npy"), TrainingScoreArray))
     
-
+    st_e = modeldata["epoch"]
     # print("\nfinetuning..")
-    for epoch in range(modeldata["epoch"], _end_epoch):  
+    del modeldata
+    for epoch in range(st_e, _end_epoch):  
         print("Epoch "+str(epoch+1)+" Running..")
 
         f = open("Models/"+model_folder+"/log.txt", 'a')
@@ -253,6 +261,7 @@ def finetune(model_folder: str):
                 f.close()
 
                 running_loss = 0.0
+        scheduler.step()
         
         print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / (i%100 + 1):.7f}')
         
@@ -285,8 +294,8 @@ def finetune(model_folder: str):
 
             torch.save(
                 {   'epoch':epoch, 
-                    "before_tune_epoch":modeldata["epoch"],
-                    "before_tune_score":modeldata["score"],
+                    "before_tune_epoch":st_e,
+                    "before_tune_score":bs,
                     'classes':CLASSES,
                     "lr":_lr,
                     "batch_size":BATCH_SIZE,
@@ -324,7 +333,7 @@ def continue_training(model_folder: str):
     net.load_state_dict(modeldata["model_state_dict"])
     
     # Chamfer_loss = ChamferDistance(point_reduction="sum", batch_reduction="mean")    
-    _lr = 1e-5
+    _lr = 1e-7
     _end_epoch = modeldata["epoch"] + 100
     optimizer = optim.Adam(net.parameters(), lr=_lr)
     # optimizer.load_state_dict(modeldata["optimizer_state_dict"])
@@ -501,7 +510,7 @@ def train_one():
 
 if __name__ == "__main__":
 
-    os.mkdir("Models/"+FOLDER_NAME)
+    # os.mkdir("Models/"+FOLDER_NAME)
 
     ShapeNetTrainData = ShapeNetDataset(classes=CLASSES, split="train80", transforms=TRANSFORMS)
     TrainLoader = DataLoader(ShapeNetTrainData, batch_size=BATCH_SIZE, shuffle=SHUFFLE, num_workers=WORKERS)
@@ -542,8 +551,10 @@ if __name__ == "__main__":
 
     towrite.append("\nTest Data Size : \t" + str(len(ShapeNetTestData)))
     towrite.append("Batches / Epochs: \t" + str(len(TestLoader)))
+    _fold = "12_03_02_23"
+    # _fold = FOLDER_NAME
 
-    with open("Models/"+FOLDER_NAME+"/log.txt", 'a') as f:
+    with open("Models/"+_fold+"/log.txt", 'a') as f:
         for txt in towrite:
             f.write(txt+"\n")
 
@@ -553,7 +564,7 @@ if __name__ == "__main__":
     # train_one()
 
     # training()
+    finetune(_fold)
 
-    _fold = "10_24_18_25"
-    continue_training(_fold)
+    # continue_training(_fold)
     # finetune(_fold)

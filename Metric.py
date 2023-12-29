@@ -6,7 +6,7 @@ from time import time
 
 import torch
 from torchvision.transforms import GaussianBlur
-from Vizualization import euler_angles_to_matrix
+from Preprocess import euler_angles_to_matrix
 from chamferdist import ChamferDistance as CD_LOSS
 
 from matplotlib import pyplot as plt
