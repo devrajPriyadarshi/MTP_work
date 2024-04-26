@@ -37,7 +37,7 @@ class FeatureExtractor(nn.Module):
 
     def forward(self, inp):
         """ Input is a  [BATCH x NUM_VIEWS x C x H x W]  vector
-            Model takes [BATCH x C x H x W]              vector """
+            VGG takes [BATCH x C x H x W]              vector """
         out = torch.stack( [ self.VGG16_model(t) for t in inp])
         return out
 

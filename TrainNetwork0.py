@@ -15,9 +15,9 @@ from Network import Network
 from DataLoaders import ShapeNetDataset
 
 if torch.cuda.is_available():
-    device = torch.device("cuda:0")
-    # device = torch.device("cpu")
-    torch.cuda.set_device(device)
+    # device = torch.device("cuda:0")
+    device = torch.device("cpu")
+    # torch.cuda.set_device(device)
 else:
     device = torch.device("cpu")
 
@@ -176,13 +176,11 @@ def training():
     f.write(towrite+'\n')
     f.close()
         
-
 def finetune(model_folder: str):
 
     modeldata = torch.load("Models/"+model_folder+"/bestScore.pth", map_location=device)
 
     bestScore = modeldata["score"]
-    # bestScore = sys.maxsize
     bestEpoch = modeldata["epoch"]
 
     bs = bestScore
@@ -190,7 +188,10 @@ def finetune(model_folder: str):
     print("")
     print("Best score: ", bestScore)
     print("Last Epoch: ", bestEpoch+1)
-    net.load_state_dict(modeldata["model_state_dict"])
+    print("Batch Size: ", modeldata["batch_size"])
+    net_f =  Network(num_views=modeldata["num_views"], num_heads=modeldata["num_heads"], num_layer=modeldata["num_layers"]).to(device)
+    
+    net_f.load_state_dict(modeldata["model_state_dict"])
 
     _lr = 1e-4
     _alpha = 1
@@ -201,11 +202,11 @@ def finetune(model_folder: str):
     Projection_loss = ProjectionLoss(rotations= [[np.pi/2, 0, 0], [0, np.pi/2, 0], [0, 0, np.pi/2]],
                                      batch_reduction="mean",
                                      view_reduction="sum",
-                                     batch_size = BATCH_SIZE)
+                                     batch_size = modeldata["batch_size"])
     
-    optimizer = optim.Adam(net.parameters(), lr=_lr)
-    # optimizer.load_state_dict(modeldata["optimizer_state_dict"])
-    scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
+    optimizer_f = optim.Adam(net.parameters(), lr=_lr)
+    # optimizer_f.load_state_dict(modeldata["optimizer_state_dict"])
+    scheduler = optim.lr_scheduler.ExponentialLR(optimizer_f, gamma=0.9)
 
 
     print("\n finetuning network..")
@@ -222,8 +223,9 @@ def finetune(model_folder: str):
     TrainingScoreArray = np.concatenate((np.load("Models/"+model_folder+"/TrainingScoreArr.npy"), TrainingScoreArray))
     
     st_e = modeldata["epoch"]
-    # print("\nfinetuning..")
+
     del modeldata
+
     for epoch in range(st_e, _end_epoch):  
         print("Epoch "+str(epoch+1)+" Running..")
 
@@ -232,26 +234,34 @@ def finetune(model_folder: str):
         f.write(towrite+'\n')
         f.close()
 
-        net.train()
+        net_f.train()
         running_loss = 0.0
         TLoss = 0
         for i, data in enumerate(TrainLoader, 0):
             
-            optimizer.zero_grad()
+            optimizer_f.zero_grad()
             imgs, pcs = data
             imgs = imgs.to(device)
             pcs = pcs.to(device)
-            res = net(imgs)
+            res = net_f(imgs)
 
+            np.save("gt.npy", pcs.detach().cpu().numpy())
+            np.save("pred.npy", res.detach().cpu().numpy())
+
+            print("CALC LOSS")
+            
             loss = _alpha*Chamfer_loss(pcs, res) + _beta*Projection_loss(pcs, res)
+            
+            print("CALC LOSS DONE")
+            
             # loss = Chamfer_loss(pcs, res)
             loss.backward()
-            optimizer.step()
+            optimizer_f.step()
 
             TLoss += loss.item()
             running_loss += loss.item()
 
-            # print(f'[{epoch + 1}, {i + 1:5d}] loss: {loss.item():.7f}')
+            print(f'[{epoch + 1}, {i + 1:5d}] loss: {loss.item():.7f}')
             if i % 100 == 99:
                 print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / 100:.7f}')
                 
@@ -303,8 +313,8 @@ def finetune(model_folder: str):
                     "num_views":NUM_VIEWS,
                     "num_heads":NUM_ENCODER_HEADS,
                     "num_layers":NUM_ENCODER_LAYERS,
-                    'model_state_dict': net.state_dict(), 
-                    'optimizer_state_dict': optimizer.state_dict()
+                    'model_state_dict': net_f.state_dict(), 
+                    'optimizer_state_dict': optimizer_f.state_dict()
                 },
                 "Models/"+model_folder+'/bestScore_finetuned.pth')
             np.save( "Models/"+model_folder+"/ValidationScoreArr_finetuned.npy", np.array(ValidationScoreArray))

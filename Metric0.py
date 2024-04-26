@@ -11,11 +11,13 @@ from chamferdist import ChamferDistance as CD_LOSS
 
 from matplotlib import pyplot as plt
 if torch.cuda.is_available():
-    device = torch.device("cuda:0")
-    # device = torch.device("cpu")
-    torch.cuda.set_device(device)
+    # device = torch.device("cuda:0")
+    device = torch.device("cpu")
+    # torch.cuda.set_device(device)
 else:
     device = torch.device("cpu")
+
+print("HEHEHEHEHEHEHE")
 
 class ChamferDistance():
     def __init__(self, point_reduction = "sum", batch_reduction = "mean"):
@@ -72,14 +74,40 @@ class ProjectionLoss(torch.nn.Module):
 
         self.ones = torch.ones((gt_batch.shape[0], 1024, 1)).to(device)
         self.prod = self.prod_.repeat(gt_batch.shape[0], 1, 1)
+        print(self.prod.tolist())
+
 
         proj1 = torch.matmul( self.K@torch.concat((self.R1,self.T), dim = 1), torch.transpose(torch.concat((gt_batch.detach(), self.ones), dim = 2), 1, 2))
+        print("proj1")
+        # print(proj1.tolist())
+        temp___ = proj1.squeeze().tolist()
+        for t__ in temp___:
+            print(t__)
         proj2 = torch.div(proj1, proj1[:,2,:].unsqueeze(1))
+        print("proj2")
+        temp___ = proj2.squeeze().tolist()
+        for t__ in temp___:
+            print(t__)
+        # print(proj2.tolist())
         proj3 = torch.sum(torch.mul(self.prod, torch.round(proj2)), dim = 1).int()
+        print("proj3")
+        print(proj3.tolist())
+        # print(len(proj3.tolist()[0]))
+        print("\nXXXXX \n")
         gt_proj1 = torch.sum(self.gaussianPlate[proj3.tolist(),:,:], dim=1).flatten(start_dim=1)
         proj1 = torch.matmul( self.K@torch.concat((self.R1,self.T), dim = 1), torch.transpose(torch.concat((res_batch.detach(), self.ones), dim = 2), 1, 2))
+        print("proj1")
+        temp___ = proj1.squeeze().tolist()
+        for t__ in temp___:
+            print(t__)
         proj2 = torch.div(proj1, proj1[:,2,:].unsqueeze(1))
+        print("proj2")
+        temp___ = proj2.squeeze().tolist()
+        for t__ in temp___:
+            print(t__)
         proj3 = torch.sum(torch.mul(self.prod, torch.round(proj2)), dim = 1).int()
+        print("proj3")
+        print(proj3.tolist())
         pred_proj1 = torch.sum(self.gaussianPlate[proj3.tolist(),:,:], dim=1).flatten(start_dim=1)
 
         proj1 = torch.matmul( self.K@torch.concat((self.R2,self.T), dim = 1), torch.transpose(torch.concat((gt_batch.detach(), self.ones), dim = 2), 1, 2))
@@ -153,10 +181,10 @@ class ProjectionLoss(torch.nn.Module):
     #     return proj_arr
     
 if __name__ == "__main__":
-    PL_Obj = ProjectionLoss(rotations=[[0,0,np.pi/2], [0,0,np.pi/2], [0,0,np.pi/2]])
-    CD_Obj1 = ChamferDistance(point_reduction="mean")
-    CD_Obj2 = ChamferDistance(point_reduction="sum")
-    chamferDist_l = CD_LOSS()
+    PL_Obj = ProjectionLoss(rotations=[[0,0,np.pi/2], [0,0,np.pi/2], [0,0,np.pi/2]], batch_size=1)
+    # CD_Obj1 = ChamferDistance(point_reduction="mean")
+    # CD_Obj2 = ChamferDistance(point_reduction="sum")
+    # chamferDist_l = CD_LOSS()
 
     # pc = torch.Tensor(np.load("tests\chair_sample\pointcloud_1024.npy")).to(device)
     # pc2 = torch.Tensor(np.load("tests\chair_sample\pointcloud_1024.npy")).to(device)
@@ -177,16 +205,18 @@ if __name__ == "__main__":
     da = np.load("tests/chair_sample/pointcloud_1024.npy")
     # pc3 = torch.Tensor(np.array([da, da,da, da,da, da,da, da, da, da,da, da,da, da,da, da, da, da,da, da,da, da,da, da, da, da,da, da,da, da,da, da])).to(device)
     # pc4 = torch.Tensor(np.array([da, da,da, da,da, da,da, da, da, da,da, da,da, da,da, da, da, da,da, da,da, da,da, da, da, da,da, da,da, da,da, da])).to(device)
-    pc3 = torch.Tensor(np.array([da, da])).to(device)
-    pc4 = torch.Tensor(np.array([da, da])).to(device)
+    pc3 = torch.Tensor(np.array([da])).to(device)
+    pc4 = torch.Tensor(np.array([da])).to(device)
     pc4 = pc4 + (0.0001**0.5)*torch.rand(pc4.shape).to(device)
-    loss_py3d1 = CD_Obj1(pc3, pc4)
-    loss_py3d2 = CD_Obj2(pc3, pc4)
+    loss = PL_Obj(pc3, pc4)
+    # loss_py3d1 = CD_Obj1(pc3, pc4)
+    # loss_py3d2 = CD_Obj2(pc3, pc4)
     # loss_cd = chamferDist_l(pc3, pc4)
     # loss_cd_bi = chamferDist_l(pc3, pc4, bidirectional = True)
 
-    print(loss_py3d1)
-    print(loss_py3d2)
+    print(loss)
+    # print(loss_py3d1)
+    # print(loss_py3d2)
     # print(loss_cd)
     # print(loss_cd_bi)
     
